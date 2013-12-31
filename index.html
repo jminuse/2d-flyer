@@ -24,6 +24,13 @@ me.fire_speed = 5.0;
 map = {};
 map.width = 5000;
 map.height = 5000;
+map.objects = [];
+
+for(var x=0; x<map.width; x+=200) {
+	for(var y=0; y<map.height; y+=200) {
+		map.objects.push( {x:x+Math.random()*50, y:y+Math.random()*50} );
+	}
+}
 
 keys = [];
 for(var i=0; i<256; i++) {
@@ -77,7 +84,7 @@ function draw() {
 	g.translate(canvas.width/2, canvas.height-50);
 	g.rotate(-me.a);
 	g.translate(-canvas.width/2, -canvas.height+50);
-	g.translate(-me.x, -me.y);
+	g.translate(-me.x+canvas.width/2, -me.y+canvas.height-50);
 	for (var x=0; x<map.width; x+=50){
 		g.moveTo(x, 0);
 		g.lineTo(x, map.height);
@@ -89,7 +96,13 @@ function draw() {
 	g.strokeStyle = "#00A";
 	g.stroke();
 	
-	g.translate(me.x, me.y);
+	for(var i=0; i<map.objects.length; i++) {
+		var o = map.objects[i];
+		g.fillStyle='#555';
+		g.fillRect(o.x-30, o.y-30, 60, 60);
+	}
+	
+	g.translate(me.x-canvas.width/2, me.y-canvas.height+50);
 	g.translate(canvas.width/2, canvas.height-50);
 	g.rotate(me.a);
 	g.translate(-canvas.width/2, -canvas.height+50);
