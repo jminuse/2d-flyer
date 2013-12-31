@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>Dragon</title>
+</head>
+<body style="background-color:black; color:#AAA;">
+	<canvas id="myCanvas" width="340" height="480"
+style="border:1px solid white; margin:auto; display:block;"></canvas>
+	<img src="dragon.gif" style="display:block; position:absolute; width:80px; top:400px; left:50%; margin-left:-40px;"/>
+	<div style='position:absolute; top:10px; left:10px;' id='info'>
+<script>
+pi = Math.PI;
+
+me = {};
+me.a = pi/2;
+me.x = 1000.0;
+me.y = 2000.0;
+me.slow_v = 0.1;
+me.v = me.slow_v;
+me.da = 0.0;
+me.fire_size = 0.0;
+me.max_fire_size = 100.0;
+me.fire_speed = 5.0;
+
+map = {};
+map.width = 5000;
+map.height = 5000;
+
+keys = [];
+for(var i=0; i<256; i++) {
+	keys[i] = false;
+}
+document.onkeydown = function(k) {
+	keys[k.which]=true;
+}
+document.onkeyup = function(k) {
+	keys[k.which]=false;
+}
+LEFT = 37; RIGHT = 39;
+UP = 38; DOWN = 40;
+SPACE = 32;
+
+var canvas=document.getElementById("myCanvas");
+var g=canvas.getContext("2d");
+canvas.style.backgroundColor = "#0A2";
+
+info = document.getElementById('info');
+previous_time = +new Date();
+function draw() {
+	requestAnimationFrame(draw);
+	current_time = +new Date();
+	dt = current_time - previous_time;
+	previous_time = current_time;
+	
+	if(keys[LEFT]) me.da = -0.0004;
+	else if(keys[RIGHT]) me.da = 0.0004;
+	else me.da = 0.0;
+	
+	if(keys[UP]) me.v = 0.2;
+	else me.v = me.slow_v;
+	
+	if(keys[SPACE]) {
+		me.fire_size += me.fire_speed;
+		if(me.fire_size>me.max_fire_size) me.fire_size=me.max_fire_size;
+	}
+	else me.fire_size = 0.0;
+	
+	me.a += dt*me.da;
+	me.x -= dt*me.v*Math.sin(-me.a);
+	me.y -= dt*me.v*Math.cos(-me.a);
+	if(me.x<0.0) me.x = 0.0;
+	if(me.y<0.0) me.y = 0.0;
+	if(me.x>map.width-0) me.x = map.width-0;
+	if(me.y>map.height-0) me.y = map.height-0;
+	
+	info.innerHTML = Math.round(1000/dt)+'fps';
+	canvas.width = canvas.width;
+	g.translate(canvas.width/2, canvas.height-50);
+	g.rotate(-me.a);
+	g.translate(-canvas.width/2, -canvas.height+50);
+	g.translate(-me.x, -me.y);
+	for (var x=0; x<map.width; x+=50){
+		g.moveTo(x, 0);
+		g.lineTo(x, map.height);
+	}
+	for(var y=0; y<map.height; y+=50){
+		g.moveTo(0, y);
+		g.lineTo(map.width, y);
+	}
+	g.strokeStyle = "#00A";
+	g.stroke();
+	
+	g.translate(me.x, me.y);
+	g.translate(canvas.width/2, canvas.height-50);
+	g.rotate(me.a);
+	g.translate(-canvas.width/2, -canvas.height+50);
+	
+	g.fillStyle = '#F00';
+	//g.fillRect(canvas.width/2-25, canvas.height-100-me.fire_size, 50, me.fire_size);
+	g.beginPath();
+	g.arc(canvas.width/2, canvas.height-90, me.fire_size, -pi/2-pi/5, -pi/2+pi/5);
+	g.lineTo(canvas.width/2, canvas.height-90);
+	g.fill();
+}
+draw();
+
+</script>
+</body>
+</html>
+
