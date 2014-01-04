@@ -3,12 +3,12 @@
 <title>Dragon</title>
 </head>
 <body style="background-color:black; color:#AAA;">
-	<canvas id="myCanvas" width="340" height="480" style="border:1px solid white; margin:auto; display:block;"></canvas>
-	<img src="dragon.gif" style="display:block; position:absolute; width:80px; top:400px; left:50%; margin-left:-40px;"/>
+	<canvas id="myCanvas" width="680" height="480" style="display:block; position:absolute; top:0px; left:50%; margin-left:-340px;"></canvas>
+	<img src="dragon.gif" style="display:block; position:absolute; width:80px; bottom:40px; left:50%; margin-left:-40px;"/>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
 	<div style='position:absolute; top:1em; right:1em; color:red;' id='health'></div>
 	<div style='position:absolute; top:5em; left:1em; color:red;' id='math'></div>
-	<div style='position:absolute; top:20px; width:340px; left:50%; margin-left:-170px; text-align:center; color:red; font-size:40px;' id='display'></div>
+	<div style='position:absolute; top:20px; width:340px; left:50%; margin-left:-170px; text-align:center; color:red; font-size:40px; pointer-events:none;' id='display'></div>
 <script>
 pi = Math.PI;
 function fast_sin(x) {
@@ -116,6 +116,8 @@ UP = 38; DOWN = 40;
 SPACE = 32;
 
 var canvas=document.getElementById("myCanvas");
+canvas.height = window.innerHeight;
+var look_distance = Math.max(canvas.width, canvas.height);
 var g=canvas.getContext("2d");
 canvas.style.backgroundColor = "#0A2";
 
@@ -168,7 +170,7 @@ function draw() {
 		if( p.x == -1000.0 ) { valid_projectile = p; continue; }
 		p.x += p.dx*dt;
 		p.y += p.dy*dt;
-		if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) > 640*640) {
+		if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) > look_distance*look_distance) {
 			p.x = -1000.0; p.y = -1000.0;
 		}
 		else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
@@ -185,7 +187,7 @@ function draw() {
 	for(var i=0; i<map.cannons.length; i++) {
 		var c = map.cannons[i];
 		
-		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) < 640*640) {
+		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) < look_distance*look_distance) {
 			var x = me.x - me.sin_neg_a*60;
 			var y = me.y - me.cos_neg_a*60;
 			
@@ -214,7 +216,7 @@ function draw() {
 	for(var i=0; i<map.wagons.length; i++) {
 		var w = map.wagons[i];
 
-		if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) < 640*640) {
+		if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) < look_distance*look_distance) {
 			var x = me.x - me.sin_neg_a*60;
 			var y = me.y - me.cos_neg_a*60;
 			
@@ -251,7 +253,7 @@ function draw() {
 	
 	for(var i=0; i<map.cannons.length; i++) {
 		var c = map.cannons[i];
-		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > 640*640 ) continue;
+		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance ) continue;
 		g.save();
 		g.translate(c.x, c.y);
 		g.rotate(-c.a);
@@ -270,7 +272,7 @@ function draw() {
 	
 	for(var i=0; i<map.wagons.length; i++) {
 		var w = map.wagons[i];
-		if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) > 640*640 ) continue;
+		if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) > look_distance*look_distance ) continue;
 		g.save();
 		g.translate(w.x, w.y);
 		g.rotate(-w.a);
@@ -287,7 +289,7 @@ function draw() {
 	
 	for(var i=0; i<map.infantry.length; i++) {
 		var n = map.infantry[i];
-		if( (n.x-me.x)*(n.x-me.x) + (n.y-me.y)*(n.y-me.y) > 640*640 ) continue;
+		if( (n.x-me.x)*(n.x-me.x) + (n.y-me.y)*(n.y-me.y) > look_distance*look_distance ) continue;
 		g.save();
 		g.translate(n.x, n.y);
 		g.rotate(-n.a);
@@ -298,7 +300,7 @@ function draw() {
 	
 	for(var i=0; i<map.cavalry.length; i++) {
 		var c = map.cavalry[i];
-		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > 640*640 ) continue;
+		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance ) continue;
 		g.save();
 		g.translate(c.x, c.y);
 		g.rotate(-c.a);
@@ -309,7 +311,7 @@ function draw() {
 	
 	for(var i=0; i<map.projectiles.length; i++) {
 		var p = map.projectiles[i];
-		if( (p.x-me.x)*(p.x-me.x) + (p.y-me.y)*(p.y-me.y) > 640*640 ) continue;
+		if( (p.x-me.x)*(p.x-me.x) + (p.y-me.y)*(p.y-me.y) > look_distance*look_distance ) continue;
 		if( p.x == -1000.0 ) continue;
 		g.beginPath();
 		g.arc(p.x, p.y, 5, 0, 2*pi);
