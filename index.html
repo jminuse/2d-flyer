@@ -6,7 +6,8 @@
 	<canvas id="myCanvas" width="340" height="480"
 style="border:1px solid white; margin:auto; display:block;"></canvas>
 	<img src="dragon.gif" style="display:block; position:absolute; width:80px; top:400px; left:50%; margin-left:-40px;"/>
-	<div style='position:absolute; top:10px; left:10px;' id='info'>
+	<div style='position:absolute; top:10px; left:10px;' id='info'></div>
+	<div style='position:absolute; top:10px; right:10px; color:red;' id='health'></div>
 <script>
 pi = Math.PI;
 
@@ -20,16 +21,23 @@ me.da = 0.0;
 me.fire_size = 0.0;
 me.max_fire_size = 100.0;
 me.fire_speed = 5.0;
+me.health = 100;
 
 map = {};
 map.width = 5000;
 map.height = 5000;
-map.objects = [];
+map.cannons = [];
+map.wagons = [];
+map.projectiles = [];
 
 for(var x=0; x<map.width; x+=200) {
 	for(var y=0; y<map.height; y+=200) {
-		map.objects.push( {x:x+Math.random()*50, y:y+Math.random()*50} );
+		map.cannons.push( {x:x+Math.random()*50, y:y+Math.random()*50, a:Math.random()*2*pi, cooldown:0.0} );
 	}
+}
+
+for(var i=0; i<10; i++) {
+	map.projectiles.push( {x:-1000.0, y:-1000.0, dx:0.0, dy:0.0} );
 }
 
 keys = [];
@@ -51,6 +59,9 @@ var g=canvas.getContext("2d");
 canvas.style.backgroundColor = "#0A2";
 
 info = document.getElementById('info');
+health_display = document.getElementById('health');
+health_display.innerHTML = me.health;
+
 previous_time = +new Date();
 function draw() {
 	requestAnimationFrame(draw);
@@ -58,8 +69,8 @@ function draw() {
 	dt = current_time - previous_time;
 	previous_time = current_time;
 	
-	if(keys[LEFT]) me.da = -0.0004;
-	else if(keys[RIGHT]) me.da = 0.0004;
+	if(keys[LEFT]) me.da = -0.0005;
+	else if(keys[RIGHT]) me.da = 0.0005;
 	else me.da = 0.0;
 	
 	if(keys[UP]) me.v = 0.2;
@@ -67,6 +78,7 @@ function draw() {
 	
 	if(keys[SPACE]) {
 		me.fire_size += me.fire_speed;
+		if(me.fire_size==me.max_fire_size) me.fire_size=0.0;
 		if(me.fire_size>me.max_fire_size) me.fire_size=me.max_fire_size;
 	}
 	else me.fire_size = 0.0;
@@ -79,12 +91,48 @@ function draw() {
 	if(me.x>map.width-0) me.x = map.width-0;
 	if(me.y>map.height-0) me.y = map.height-0;
 	
-	for(var i=0; i<map.objects.length; i++) {
-		var o = map.objects[i];
-		var x = me.x - Math.sin(-me.a)*50;
-		var y = me.y - Math.cos(-me.a)*50;
-		if( (o.x-x)*(o.x-x) + (o.y-y)*(o.y-y) < me.fire_size*me.fire_size ) {
-			o.x = -1000.0; o.y = -1000.0;
+	var valid_projectile = null;
+	for(var i=0; i<map.projectiles.length; i++) {
+		var p = map.projectiles[i];
+		if( p.x == -1000.0 ) { valid_projectile = p; continue; }
+		p.x += p.dx*dt;
+		p.y += p.dy*dt;
+		if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) > 640*640) {
+			p.x = -1000.0; p.y = -1000.0;
+		}
+		else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 40*40) {
+			p.x = -1000.0; p.y = -1000.0;
+			me.health -= 10;
+			health_display.innerHTML = me.health;
+			if(me.health<=0) {
+				alert('You lose');
+			}
+		}
+	}
+	
+	for(var i=0; i<map.cannons.length; i++) {
+		var c = map.cannons[i];
+		
+		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) < 1000*1000) {
+			var x = me.x - Math.sin(-me.a)*60;
+			var y = me.y - Math.cos(-me.a)*60;
+			
+			var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
+			
+			c.a += (c.a < aim_angle || c.a < aim_angle+pi*2 ? 0.001 : -0.001)*dt;
+			
+			c.cooldown -= dt;
+			
+			if( (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < me.fire_size*me.fire_size*0.7*0.7 ) {
+				c.x = -1000.0; c.y = -1000.0;
+			}
+			else if(valid_projectile && c.cooldown<=0 && (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < 200*200) {
+				valid_projectile.x = c.x;
+				valid_projectile.y = c.y;
+				valid_projectile.dx = -0.2*Math.sin(c.a);
+				valid_projectile.dy = -0.2*Math.cos(c.a);
+				c.cooldown = 1000;
+			}
 		}
 	}
 	
@@ -105,13 +153,31 @@ function draw() {
 	g.strokeStyle = "#00A";
 	g.stroke();
 	
-	for(var i=0; i<map.objects.length; i++) {
-		var o = map.objects[i];
-		g.fillStyle='#444';
-		g.fillRect(o.x-10, o.y-25, 10, 50);
+	for(var i=0; i<map.cannons.length; i++) {
+		var c = map.cannons[i];
+		g.translate(c.x, c.y);
+		g.rotate(-c.a);
+		var cannon_width = 10;
+		var wheel_width = 5;
+		var wheel_length = 30;
+		var cannon_length = 40;
 		g.fillStyle='#961';
-		g.fillRect(o.x, o.y-10, 10, 30);
-		g.fillRect(o.x-20, o.y-10, 10, 30);
+		g.fillRect(cannon_width/2+3, -wheel_length/2, wheel_width, wheel_length);
+		g.fillRect(-cannon_width/2-wheel_width-3, -wheel_length/2, wheel_width, wheel_length);
+		g.fillRect(-cannon_width/2-3, -5, cannon_width+2*3, 10);
+		g.fillStyle='#444';
+		g.fillRect(-cannon_width/2, -12-wheel_length/2, cannon_width, cannon_length);
+		g.rotate(c.a);
+		g.translate(-c.x, -c.y);
+	}
+	
+	for(var i=0; i<map.projectiles.length; i++) {
+		var p = map.projectiles[i];
+		if( p.x == -1000.0 ) continue;
+		g.beginPath();
+		g.arc(p.x, p.y, 5, 0, 2*pi);
+		g.fillStyle='#222';
+		g.fill();
 	}
 	
 	g.translate(me.x-canvas.width/2, me.y-canvas.height+50);
