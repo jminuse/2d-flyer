@@ -4,7 +4,7 @@
 </head>
 <body style="background-color:black; color:#AAA;">
 	<canvas id="myCanvas" width="340" height="480" style="display:block; position:absolute; top:0px; left:50%; margin-left:-170px;"></canvas>
-	<img src="dragon.gif" style="display:block; position:absolute; width:80px; bottom:40px; left:50%; margin-left:-40px;"/>
+	<img src="dragon.gif" style="display:none; position:absolute; width:80px; bottom:40px; left:50%; margin-left:-40px;" id='dragon-gif'/>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
 	<div style='position:absolute; top:1em; right:1em; color:red;' id='health'></div>
 	<div style='position:absolute; top:5em; left:1em; color:red;' id='math'></div>
@@ -117,9 +117,13 @@ SPACE = 32;
 
 var canvas=document.getElementById("myCanvas");
 canvas.height = window.innerHeight;
-var look_distance = Math.max(canvas.width, canvas.height);
+canvas.width = canvas.height * 340/480;
+canvas.style.marginLeft = (-canvas.width/2)+'px';
+var scale = canvas.height/480;
+var look_distance = 480;
 var g=canvas.getContext("2d");
 canvas.style.backgroundColor = "#0A2";
+var dragon_gif = document.getElementById('dragon-gif');
 
 info = document.getElementById('info');
 health_display = document.getElementById('health');
@@ -235,11 +239,12 @@ function draw() {
 	
 	info.innerHTML = Math.round(1000/dt)+'fps';
 	canvas.width = canvas.width;
+	g.scale(scale, scale);
 	g.save();
-	g.translate(canvas.width/2, canvas.height-50);
+	g.translate(canvas.width/2/scale, canvas.height/scale-50);
 	g.rotate(-me.a);
-	g.translate(-canvas.width/2, -canvas.height+50);
-	g.translate(-me.x+canvas.width/2, -me.y+canvas.height-50);
+	g.translate(-canvas.width/2/scale, -canvas.height/scale+50);
+	g.translate(-me.x+canvas.width/2/scale, -me.y+canvas.height/scale-50);
 	for (var x=0; x<map.width; x+=50){
 		g.moveTo(x, 0);
 		g.lineTo(x, map.height);
@@ -318,14 +323,16 @@ function draw() {
 		g.fillStyle='#222';
 		g.fill();
 	}
-	
 	g.restore();
 	
 	g.fillStyle = '#F00';
 	g.beginPath();
-	g.arc(canvas.width/2, canvas.height-90, me.fire_size, -pi/2-pi/5, -pi/2+pi/5);
-	g.lineTo(canvas.width/2, canvas.height-90);
+	g.arc(canvas.width/2/scale, canvas.height/scale-80, me.fire_size, -pi/2-pi/5, -pi/2+pi/5);
+	g.lineTo(canvas.width/2/scale, canvas.height/scale-80);
 	g.fill();
+	g.fillStyle = '#a0a';
+	//g.fillRect(canvas.width/2/scale-30,canvas.height/scale-90-30,60,60);
+	g.drawImage(dragon_gif, canvas.width/2/scale-80*scale/2, canvas.height/scale-50-60*scale/2, 80*scale, 60*scale);
 }
 draw();
 
