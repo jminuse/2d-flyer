@@ -69,9 +69,21 @@ for(var x=0; x<map.width; x+=200) {
 	}
 }
 
+for(var x=0; x<map.width; x+=550) {
+	for(var y=0; y<map.height; y+=550) {
+		map.wagons.push( {x:x+Math.random()*50, y:y+Math.random()*50, a:Math.random()*2*pi, burned:false} );
+	}
+}
+
 for(var x=0; x<map.width; x+=500) {
 	for(var y=0; y<map.height; y+=500) {
-		map.wagons.push( {x:x+Math.random()*50, y:y+Math.random()*50, a:Math.random()*2*pi, burned:false} );
+		map.infantry.push( {x:x+Math.random()*500, y:y+Math.random()*500, a:Math.random()*2*pi} );
+	}
+}
+
+for(var x=0; x<map.width; x+=500) {
+	for(var y=0; y<map.height; y+=500) {
+		map.cavalry.push( {x:x+Math.random()*500, y:y+Math.random()*500, a:Math.random()*2*pi} );
 	}
 }
 
@@ -238,9 +250,35 @@ function draw() {
 		g.translate(w.x, w.y);
 		g.rotate(-w.a);
 		g.fillStyle = w.burned ? '#000' : '#851';
-		g.fillRect(0, 0, 30, 60);
+		g.fillRect(-15, -30, 30, 60);
+		
+		g.fillRect(15+1, 5, 3, 20);
+		g.fillRect(-15-3-1, 5, 3, 20);
+		
+		g.fillRect(15+1, -25, 3, 20);
+		g.fillRect(-15-3-1, -25, 3, 20);
 		g.rotate(w.a);
 		g.translate(-w.x, -w.y);
+	}
+	
+	for(var i=0; i<map.infantry.length; i++) {
+		var n = map.infantry[i];
+		g.translate(n.x, n.y);
+		g.rotate(-n.a);
+		g.fillStyle = '#F00';
+		//g.fillRect(0, 0, 30, 30);
+		g.rotate(n.a);
+		g.translate(-n.x, -n.y);
+	}
+	
+	for(var i=0; i<map.cavalry.length; i++) {
+		var c = map.cavalry[i];
+		g.translate(c.x, c.y);
+		g.rotate(-c.a);
+		g.fillStyle = '#F92';
+		//g.fillRect(0, 0, 20, 40);
+		g.rotate(c.a);
+		g.translate(-c.x, -c.y);
 	}
 	
 	for(var i=0; i<map.projectiles.length; i++) {
