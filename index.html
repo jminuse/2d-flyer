@@ -132,6 +132,7 @@ function draw() {
 	current_time = +new Date();
 	dt = current_time - previous_time;
 	previous_time = current_time;
+	if(dt>500) return; //pause while offscreen
 	
 	if(me.health<=0) { //defeat
 		return;
@@ -251,6 +252,7 @@ function draw() {
 	
 	for(var i=0; i<map.cannons.length; i++) {
 		var c = map.cannons[i];
+		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > 640*640 ) continue;
 		g.save();
 		g.translate(c.x, c.y);
 		g.rotate(-c.a);
@@ -269,6 +271,7 @@ function draw() {
 	
 	for(var i=0; i<map.wagons.length; i++) {
 		var w = map.wagons[i];
+		if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) > 640*640 ) continue;
 		g.save();
 		g.translate(w.x, w.y);
 		g.rotate(-w.a);
@@ -285,6 +288,7 @@ function draw() {
 	
 	for(var i=0; i<map.infantry.length; i++) {
 		var n = map.infantry[i];
+		if( (n.x-me.x)*(n.x-me.x) + (n.y-me.y)*(n.y-me.y) > 640*640 ) continue;
 		g.save();
 		g.translate(n.x, n.y);
 		g.rotate(-n.a);
@@ -295,6 +299,7 @@ function draw() {
 	
 	for(var i=0; i<map.cavalry.length; i++) {
 		var c = map.cavalry[i];
+		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > 640*640 ) continue;
 		g.save();
 		g.translate(c.x, c.y);
 		g.rotate(-c.a);
@@ -305,6 +310,7 @@ function draw() {
 	
 	for(var i=0; i<map.projectiles.length; i++) {
 		var p = map.projectiles[i];
+		if( (p.x-me.x)*(p.x-me.x) + (p.y-me.y)*(p.y-me.y) > 640*640 ) continue;
 		if( p.x == -1000.0 ) continue;
 		g.beginPath();
 		g.arc(p.x, p.y, 5, 0, 2*pi);
