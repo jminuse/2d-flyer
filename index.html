@@ -54,6 +54,8 @@ display("Hey!");
 
 me = {};
 me.a = pi/2;
+me.sin_neg_a = Math.sin(-me.a);
+me.cos_neg_a = Math.cos(-me.a);
 me.x = 1000.0;
 me.y = 2000.0;
 me.slow_v = 0.1;
@@ -150,8 +152,12 @@ function draw() {
 	else me.fire_size = 0.0;
 	
 	me.a += dt*me.da;
-	me.x -= dt*me.v*Math.sin(-me.a);
-	me.y -= dt*me.v*Math.cos(-me.a);
+	if(me.da!=0.0) {
+		me.sin_neg_a = Math.sin(-me.a);
+		me.cos_neg_a = Math.cos(-me.a);
+	}
+	me.x -= dt*me.v*me.sin_neg_a;
+	me.y -= dt*me.v*me.cos_neg_a;
 	if(me.x<0.0) me.x = 0.0;
 	if(me.y<0.0) me.y = 0.0;
 	if(me.x>map.width-0) me.x = map.width-0;
@@ -181,20 +187,21 @@ function draw() {
 		var c = map.cannons[i];
 		
 		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) < 640*640) {
-			var x = me.x - Math.sin(-me.a)*60;
-			var y = me.y - Math.cos(-me.a)*60;
+			var x = me.x - me.sin_neg_a*60;
+			var y = me.y - me.cos_neg_a*60;
 			
-			var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
-			
-			c.a += (c.a < aim_angle || c.a < aim_angle+pi*2 ? 0.0004 : -0.0004)*dt;
-			
+			if(Math.random()<0.1) {
+				var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
+				c.a += (c.a < aim_angle || c.a < aim_angle+pi*2 ? 0.004 : -0.004)*dt;
+			}
 			c.cooldown -= dt;
 			
 			if( (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < me.fire_size*me.fire_size*0.7*0.7 ) {
 				c.x = -1000.0; c.y = -1000.0;
 			}
 			else if(valid_projectile && c.cooldown<=0 && (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < 200*200) {
-				var sin_a = Math.sin(c.a); var cos_a = Math.cos(c.a);
+				var sin_a = Math.sin(c.a);
+				var cos_a = Math.cos(c.a);
 				valid_projectile.x = c.x - 20*sin_a;
 				valid_projectile.y = c.y - 20*cos_a;
 				valid_projectile.dx = -0.2*sin_a;
@@ -208,8 +215,8 @@ function draw() {
 		var w = map.wagons[i];
 
 		if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) < 640*640) {
-			var x = me.x - Math.sin(-me.a)*60;
-			var y = me.y - Math.cos(-me.a)*60;
+			var x = me.x - me.sin_neg_a*60;
+			var y = me.y - me.cos_neg_a*60;
 			
 			if( (w.x-x)*(w.x-x) + (w.y-y)*(w.y-y) < me.fire_size*me.fire_size*1.0*1.0 ) {
 				w.burned = true;
@@ -226,6 +233,7 @@ function draw() {
 	
 	info.innerHTML = Math.round(1000/dt)+'fps';
 	canvas.width = canvas.width;
+	g.save();
 	g.translate(canvas.width/2, canvas.height-50);
 	g.rotate(-me.a);
 	g.translate(-canvas.width/2, -canvas.height+50);
@@ -243,6 +251,7 @@ function draw() {
 	
 	for(var i=0; i<map.cannons.length; i++) {
 		var c = map.cannons[i];
+		g.save();
 		g.translate(c.x, c.y);
 		g.rotate(-c.a);
 		var cannon_width = 10;
@@ -255,12 +264,12 @@ function draw() {
 		g.fillRect(-cannon_width/2-3, -5, cannon_width+2*3, 10);
 		g.fillStyle='#444';
 		g.fillRect(-cannon_width/2, -12-wheel_length/2, cannon_width, cannon_length);
-		g.rotate(c.a);
-		g.translate(-c.x, -c.y);
+		g.restore();
 	}
 	
 	for(var i=0; i<map.wagons.length; i++) {
 		var w = map.wagons[i];
+		g.save();
 		g.translate(w.x, w.y);
 		g.rotate(-w.a);
 		g.fillStyle = w.burned ? '#000' : '#851';
@@ -271,28 +280,27 @@ function draw() {
 		
 		g.fillRect(15+1, -25, 3, 20);
 		g.fillRect(-15-3-1, -25, 3, 20);
-		g.rotate(w.a);
-		g.translate(-w.x, -w.y);
+		g.restore();
 	}
 	
 	for(var i=0; i<map.infantry.length; i++) {
 		var n = map.infantry[i];
+		g.save();
 		g.translate(n.x, n.y);
 		g.rotate(-n.a);
 		g.fillStyle = '#F00';
 		//g.fillRect(0, 0, 30, 30);
-		g.rotate(n.a);
-		g.translate(-n.x, -n.y);
+		g.restore();
 	}
 	
 	for(var i=0; i<map.cavalry.length; i++) {
 		var c = map.cavalry[i];
+		g.save();
 		g.translate(c.x, c.y);
 		g.rotate(-c.a);
 		g.fillStyle = '#F92';
 		//g.fillRect(0, 0, 20, 40);
-		g.rotate(c.a);
-		g.translate(-c.x, -c.y);
+		g.restore();
 	}
 	
 	for(var i=0; i<map.projectiles.length; i++) {
@@ -304,10 +312,7 @@ function draw() {
 		g.fill();
 	}
 	
-	g.translate(me.x-canvas.width/2, me.y-canvas.height+50);
-	g.translate(canvas.width/2, canvas.height-50);
-	g.rotate(me.a);
-	g.translate(-canvas.width/2, -canvas.height+50);
+	g.restore();
 	
 	g.fillStyle = '#F00';
 	g.beginPath();
