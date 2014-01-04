@@ -172,7 +172,7 @@ function draw() {
 			
 			var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
 			
-			c.a += (c.a < aim_angle || c.a < aim_angle+pi*2 ? 0.0002 : -0.0002)*dt;
+			c.a += (c.a < aim_angle || c.a < aim_angle+pi*2 ? 0.0004 : -0.0004)*dt;
 			
 			c.cooldown -= dt;
 			

@@ -1,0 +1,6 @@
+A 2D flying game engine. 
+
+The game now implemented is a dragon flying game.
+
+The entire project is one HTML file, or to be more specific a Javascript file with a few lines of HTML to make it display as a canvas.
+
