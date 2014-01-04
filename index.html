@@ -50,8 +50,6 @@ function display(s, t, color) {
 	setTimeout("display_box.style.display='none';", t);
 }
 
-display("Hey!");
-
 me = {};
 me.a = pi/2;
 me.sin_neg_a = Math.sin(-me.a);
@@ -191,10 +189,11 @@ function draw() {
 			var x = me.x - me.sin_neg_a*60;
 			var y = me.y - me.cos_neg_a*60;
 			
-			if(Math.random()<0.1) {
-				var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
-				c.a += (c.a < aim_angle || c.a < aim_angle+pi*2 ? 0.004 : -0.004)*dt;
-			}
+			var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
+			c.a += (c.a < aim_angle ? 0.0004 : -0.0004)*dt;
+			if(c.a<-pi) c.a+=2*pi;
+			else if(c.a>pi) c.a-=2*pi;
+			
 			c.cooldown -= dt;
 			
 			if( (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < me.fire_size*me.fire_size*0.7*0.7 ) {
