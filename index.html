@@ -3,13 +3,12 @@
 <title>Dragon</title>
 </head>
 <body style="background-color:black; color:#AAA;">
-	<canvas id="myCanvas" width="340" height="480"
-style="border:1px solid white; margin:auto; display:block;"></canvas>
+	<canvas id="myCanvas" width="340" height="480" style="border:1px solid white; margin:auto; display:block;"></canvas>
 	<img src="dragon.gif" style="display:block; position:absolute; width:80px; top:400px; left:50%; margin-left:-40px;"/>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
 	<div style='position:absolute; top:1em; right:1em; color:red;' id='health'></div>
-	<div style='position:absolute; top:3em; left:1em; color:#99F;' id='objective-display'></div>
 	<div style='position:absolute; top:5em; left:1em; color:red;' id='math'></div>
+	<div style='position:absolute; top:20px; width:340px; left:50%; margin-left:-170px; text-align:center; color:red; font-size:40px;' id='display'></div>
 <script>
 pi = Math.PI;
 function fast_sin(x) {
@@ -41,6 +40,17 @@ for(var x=0; x<pi; x+=pi/10000000) {
 var t2 = +new Date();
 document.getElementById('math').innerHTML = (t1-t0)+', '+(t2-t1);
 */
+
+var display_box = document.getElementById('display');
+function display(s, t, color) {
+	if(!t) t=1000;
+	if(color) display_box.style.color = color;
+	display_box.innerHTML = s;
+	display_box.style.display = 'block';
+	setTimeout("display_box.style.display='none';", t);
+}
+
+display("Hey!");
 
 me = {};
 me.a = pi/2;
@@ -111,9 +121,8 @@ canvas.style.backgroundColor = "#0A2";
 
 info = document.getElementById('info');
 health_display = document.getElementById('health');
-objective_display = document.getElementById('objective-display');
 health_display.innerHTML = me.health;
-objective_display.innerHTML = 'Objective: burn all supply wagons';
+display('Objective: burn all supply wagons', 3000);
 
 previous_time = +new Date();
 function draw() {
@@ -121,6 +130,10 @@ function draw() {
 	current_time = +new Date();
 	dt = current_time - previous_time;
 	previous_time = current_time;
+	
+	if(me.health<=0) { //defeat
+		return;
+	}
 	
 	if(keys[LEFT]) me.da = -0.0005;
 	else if(keys[RIGHT]) me.da = 0.0005;
@@ -155,10 +168,11 @@ function draw() {
 		}
 		else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
 			p.x = -1000.0; p.y = -1000.0;
-			me.health -= 10;
+			me.health -= 20;
 			health_display.innerHTML = me.health;
 			if(me.health<=0) {
-				alert('You lose');
+				display('We are defeated!<br>Pull back!', 5000);
+				return;
 			}
 		}
 	}
@@ -205,7 +219,7 @@ function draw() {
 						burned_count+=1;
 				}
 				if(burned_count==map.wagons.length)
-					alert('You won!');
+					display('Victory!', 10000, 'blue');
 			}
 		}
 	}
