@@ -4,7 +4,8 @@
 </head>
 <body style="background-color:black; color:#AAA;">
 	<canvas id="myCanvas" style="display:block; position:absolute; top:0px; left:50%;"></canvas>
-	<img src="dragon.gif" style="display:none;" id='dragon-gif'/>
+	<img src="dragon.png" style="display:none;" id='dragon-image'/>
+	<img src="dragon_spritesheet.png" style="display:none;" id='dragon-spritesheet'/>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
 	<div style='position:absolute; top:1em; right:1em; color:red;' id='health'></div>
 	<div style='position:absolute; top:1em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
@@ -28,13 +29,20 @@ var Player = (function() {
 		this.cos_neg_a = Math.cos(-this.a)
 		this.x = 1000.0
 		this.y = 2000.0
-		this.slow_v = 0.1
-		this.v = this.slow_v
+		this.min_z = 1.0;
+		this.max_z = 1.4;
+		this.z = this.max_z;
+		this.dz = 0.0
+		this.max_v = 0.2
+		this.v = this.max_v
 		this.da = 0.0
 		this.fire_size = 0.0
 		this.max_fire_size = 100.0
 		this.fire_speed = 5.0
 		this.health = 100
+		this.sprite_cycle_length = 10.0;
+		this.sprite_cycle_index = 0.0;
+		this.sprite_cycle_speed = 0.02;
 	}
 	return Player;
 })();
@@ -107,7 +115,8 @@ display_box.style.fontSize = (40*scale)+'px';
 var look_distance = 480;
 var g=canvas.getContext("2d");
 canvas.style.backgroundColor = "#0A2";
-var dragon_gif = document.getElementById('dragon-gif');
+var dragon_image = document.getElementById('dragon-image');
+var dragon_spritesheet = document.getElementById('dragon-spritesheet');
 
 info = document.getElementById('info');
 health_display = document.getElementById('health');
@@ -130,8 +139,10 @@ function draw() {
 	else if(keys[RIGHT]) me.da = 0.0005;
 	else me.da = 0.0;
 	
-	if(keys[UP]) me.v = 0.2;
-	else me.v = me.slow_v;
+	if(keys[DOWN]) { me.v = 0.9*me.max_v; me.dz=0.0005; } //go up
+	//else { me.v = 1.5*me.max_v; me.dz=-0.0001; } //go down
+	else if(keys[UP]) { me.v = 1.2*me.max_v; me.dz=-0.001; } //go down
+	else { me.v = me.max_v; me.dz=0.0; }
 	
 	if(keys[SPACE]) {
 		me.fire_size += me.fire_speed;
@@ -139,6 +150,10 @@ function draw() {
 		if(me.fire_size>me.max_fire_size) me.fire_size=me.max_fire_size;
 	}
 	else me.fire_size = 0.0;
+	
+	me.z += dt*me.dz;
+	if(me.z<me.min_z) { me.z=me.min_z; me.dz=0.0; me.v=me.max_v; }
+	else if(me.z>me.max_z) { me.z=me.max_z; me.dz=0.0; me.v=me.max_v; }
 	
 	me.a += dt*me.da;
 	if(me.da!=0.0) {
@@ -311,12 +326,16 @@ function draw() {
 	
 	g.fillStyle = '#F00';
 	g.beginPath();
-	g.arc(canvas.width/2/scale, canvas.height/scale-80, me.fire_size, -pi/2-pi/5, -pi/2+pi/5);
-	g.lineTo(canvas.width/2/scale, canvas.height/scale-80);
+	g.arc(canvas.width/2/scale, canvas.height/scale-me.z*80*scale/2-40, me.fire_size, -pi/2-pi/5, -pi/2+pi/5);
+	g.lineTo(canvas.width/2/scale, canvas.height/scale-me.z*80*scale/2-40);
 	g.fill();
 	g.fillStyle = '#a0a';
 	//g.fillRect(canvas.width/2/scale-30,canvas.height/scale-90-30,60,60);
-	g.drawImage(dragon_gif, canvas.width/2/scale-80*scale/2, canvas.height/scale-50-60*scale/2, 80*scale, 60*scale);
+	//g.drawImage(dragon_image, canvas.width/2/scale-me.z*100*scale/2, canvas.height/scale-50-me.z*80*scale/2, me.z*100*scale, me.z*80*scale);
+	me.sprite_cycle_index += dt*me.sprite_cycle_speed;
+	if(me.sprite_cycle_index>me.sprite_cycle_length) me.sprite_cycle_index=0;
+	var index = me.sprite_cycle_index|0;
+	g.drawImage(dragon_spritesheet, index*75-2, 0, 75, 75, canvas.width/2/scale-me.z*100*scale/2, canvas.height/scale-50-me.z*80*scale/2, me.z*100*scale, me.z*80*scale);
 }
 draw();
 
