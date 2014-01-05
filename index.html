@@ -3,103 +3,84 @@
 <title>Dragon</title>
 </head>
 <body style="background-color:black; color:#AAA;">
-	<canvas id="myCanvas" width="340" height="480" style="display:block; position:absolute; top:0px; left:50%; margin-left:-170px;"></canvas>
-	<img src="dragon.gif" style="display:none; position:absolute; width:80px; bottom:40px; left:50%; margin-left:-40px;" id='dragon-gif'/>
+	<canvas id="myCanvas" style="display:block; position:absolute; top:0px; left:50%;"></canvas>
+	<img src="dragon.gif" style="display:none;" id='dragon-gif'/>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
 	<div style='position:absolute; top:1em; right:1em; color:red;' id='health'></div>
-	<div style='position:absolute; top:5em; left:1em; color:red;' id='math'></div>
-	<div style='position:absolute; top:20px; width:340px; left:50%; margin-left:-170px; text-align:center; color:red; font-size:40px; pointer-events:none;' id='display'></div>
+	<div style='position:absolute; top:1em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
 <script>
 pi = Math.PI;
-function fast_sin(x) {
-	while(x>pi) x-=2*pi;
-	while(x<-pi) x+=2*pi;
-	if(x>0)
-		return 4/pi*x - 4/(pi*pi)*x*x;
-	else
-		return 4/pi*x + 4/(pi*pi)*x*x;
-}
-function fast_cos(x) {
-	x+=pi/2;
-	return fast_sin(x);
-}
-
-/*for(var x=0; x<2*pi; x+=pi/10) {
-	document.getElementById('math').innerHTML += ( Math.round(Math.sin(x)*100)/100+', '+Math.round(fast_sin(x)*100)/100 ) + '<br>';
-}*/
-
-/*
-var t0 = +new Date();
-for(var x=0; x<pi; x+=pi/10000000) {
-	fast_sin(x);
-}
-var t1 = +new Date();
-for(var x=0; x<pi; x+=pi/10000000) {
-	Math.sin(x);
-}
-var t2 = +new Date();
-document.getElementById('math').innerHTML = (t1-t0)+', '+(t2-t1);
-*/
 
 var display_box = document.getElementById('display');
 function display(s, t, color) {
-	if(!t) t=1000;
-	if(color) display_box.style.color = color;
+	if(!t) t=2000;
+	if(!color) color='red';
+	display_box.style.color = color;
 	display_box.innerHTML = s;
 	display_box.style.display = 'block';
 	setTimeout("display_box.style.display='none';", t);
 }
 
-me = {};
-me.a = pi/2;
-me.sin_neg_a = Math.sin(-me.a);
-me.cos_neg_a = Math.cos(-me.a);
-me.x = 1000.0;
-me.y = 2000.0;
-me.slow_v = 0.1;
-me.v = me.slow_v;
-me.da = 0.0;
-me.fire_size = 0.0;
-me.max_fire_size = 100.0;
-me.fire_speed = 5.0;
-me.health = 100;
-
-map = {};
-map.width = 5000;
-map.height = 5000;
-map.cannons = [];
-map.wagons = [];
-map.infantry = [];
-map.cavalry = [];
-map.projectiles = [];
-
-for(var x=0; x<map.width; x+=200) {
-	for(var y=0; y<map.height; y+=200) {
-		map.cannons.push( {x:x+Math.random()*50, y:y+Math.random()*50, a:Math.random()*2*pi, cooldown:0.0} );
+var Player = (function() {
+	function Player() {
+		this.a = pi/2
+		this.sin_neg_a = Math.sin(-this.a)
+		this.cos_neg_a = Math.cos(-this.a)
+		this.x = 1000.0
+		this.y = 2000.0
+		this.slow_v = 0.1
+		this.v = this.slow_v
+		this.da = 0.0
+		this.fire_size = 0.0
+		this.max_fire_size = 100.0
+		this.fire_speed = 5.0
+		this.health = 100
 	}
-}
+	return Player;
+})();
 
-for(var x=0; x<map.width; x+=550) {
-	for(var y=0; y<map.height; y+=550) {
-		map.wagons.push( {x:x+Math.random()*50, y:y+Math.random()*50, a:Math.random()*2*pi, burned:false} );
+var Map = (function() {
+	function Map() {
+		this.width = 5000;
+		this.height = 5000;
+		this.cannons = [];
+		this.wagons = [];
+		this.infantry = [];
+		this.cavalry = [];
+		this.projectiles = [];
+		for(var x=0; x<this.width; x+=200) {
+			for(var y=0; y<this.height; y+=200) {
+				this.cannons.push( {x:x+Math.random()*50, y:y+Math.random()*50, a:Math.random()*2*pi, cooldown:0.0} );
+			}
+		}
+
+		for(var x=0; x<this.width; x+=550) {
+			for(var y=0; y<this.height; y+=550) {
+				this.wagons.push( {x:x+Math.random()*50, y:y+Math.random()*50, a:Math.random()*2*pi, burned:false} );
+			}
+		}
+
+		for(var x=0; x<this.width; x+=500) {
+			for(var y=0; y<this.height; y+=500) {
+				this.infantry.push( {x:x+Math.random()*500, y:y+Math.random()*500, a:Math.random()*2*pi} );
+			}
+		}
+
+		for(var x=0; x<this.width; x+=500) {
+			for(var y=0; y<this.height; y+=500) {
+				this.cavalry.push( {x:x+Math.random()*500, y:y+Math.random()*500, a:Math.random()*2*pi} );
+			}
+		}
+
+		for(var i=0; i<10; i++) {
+			this.projectiles.push( {x:-1000.0, y:-1000.0, dx:0.0, dy:0.0} );
+		}
 	}
-}
+	return Map;
+})();
 
-for(var x=0; x<map.width; x+=500) {
-	for(var y=0; y<map.height; y+=500) {
-		map.infantry.push( {x:x+Math.random()*500, y:y+Math.random()*500, a:Math.random()*2*pi} );
-	}
-}
-
-for(var x=0; x<map.width; x+=500) {
-	for(var y=0; y<map.height; y+=500) {
-		map.cavalry.push( {x:x+Math.random()*500, y:y+Math.random()*500, a:Math.random()*2*pi} );
-	}
-}
-
-for(var i=0; i<10; i++) {
-	map.projectiles.push( {x:-1000.0, y:-1000.0, dx:0.0, dy:0.0} );
-}
+var me = new Player();
+var map = new Map();
 
 keys = [];
 for(var i=0; i<256; i++) {
@@ -119,7 +100,10 @@ var canvas=document.getElementById("myCanvas");
 canvas.height = window.innerHeight;
 canvas.width = canvas.height * 340/480;
 canvas.style.marginLeft = (-canvas.width/2)+'px';
+display_box.style.width = canvas.width+'px';
+display_box.style.marginLeft = canvas.style.marginLeft;
 var scale = canvas.height/480;
+display_box.style.fontSize = (40*scale)+'px';
 var look_distance = 480;
 var g=canvas.getContext("2d");
 canvas.style.backgroundColor = "#0A2";
