@@ -75,6 +75,10 @@ var MapObject = (function() {
 		this.a = a || 0.0;
 		this.burned = burned || false;
 		this.cooldown = cooldown || 0.0;
+		this.v = 0.0;
+		this.dx = 0.0;
+		this.dy = 0.0;
+		if(type==CAVALRY) { this.v = 0.1; }
 	}
 	return MapObject;
 })();
@@ -210,8 +214,8 @@ function draw() {
 		if(o.type==CANNONBALL || o.type==BULLET) {
 			var p = o;
 			if( p.x == -1000.0 ) { valid_projectile = p; continue; }
-			p.x += p.dx*dt;
-			p.y += p.dy*dt;
+			p.x += dt*p.dx;
+			p.y += dt*p.dy;
 			if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) > look_distance*look_distance) {
 				p.x = -1000.0; p.y = -1000.0;
 			}
@@ -230,6 +234,16 @@ function draw() {
 		}
 		else if(o.type==CANNON || o.type==INFANTRY || o.type==CAVALRY) {
 			var c = o;
+			
+			c.dx = -c.v*Math.sin(c.a);
+			c.dy = -c.v*Math.cos(c.a);
+			o.x += dt*o.dx;
+			o.y += dt*o.dy;
+			if(o.x<0.0) { o.x = 0.0; }
+			if(o.y<0.0) { o.y = 0.0; }
+			if(o.x>map.width-0) { o.x = map.width-0; }
+			if(o.y>map.height-0) { o.y = map.height-0; }
+			
 			if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance) { continue; }
 			var x = me.x - me.sin_neg_a*60;
 			var y = me.y - me.cos_neg_a*60;
@@ -239,7 +253,12 @@ function draw() {
 			if(Math.abs(dif)>Math.abs(c.a-aim_angle+2*pi)) { dif = c.a-aim_angle+2*pi; }
 			if(Math.abs(dif)>Math.abs(c.a-aim_angle-2*pi)) { dif = c.a-aim_angle-2*pi; }
 	
-			c.a += (dif<0.0 ? 0.0002 : -0.0002)*dt;
+			if(c.type==CANNON) {
+				c.a += (dif<0.0 ? 0.0002 : -0.0002)*dt;
+			}
+			else {
+				c.a += (dif<0.0 ? 0.002 : -0.002)*dt;
+			}
 			if(c.a<-pi) { c.a+=2*pi; }
 			else if(c.a>pi) { c.a-=2*pi; }
 		
