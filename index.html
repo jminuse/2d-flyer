@@ -36,7 +36,7 @@ var Player = (function() {
 	function Player() {
 		this.a = pi/2;
 		this.da = 0.0;
-		this.max_da = 0.001;
+		this.max_da = 0.002;
 		this.dda = 0.0001;
 		this.sin_neg_a = Math.sin(-this.a);
 		this.cos_neg_a = Math.cos(-this.a);
@@ -46,7 +46,7 @@ var Player = (function() {
 		this.dx = 0.0;
 		this.dy = 0.0;
 		this.dz = 0.001;
-		this.max_v = 0.3;
+		this.max_v = 0.5;
 		this.v = this.max_v*0.5;
 		this.dv = 0.000;
 		this.max_dv = 0.001;
@@ -209,6 +209,8 @@ function draw() {
 	if(me.y>map.height-0) { me.y = map.height-0; }
 	
 	var valid_projectile = null;
+	var nearest_goal = null;
+	var nearest_goal_distance = 1e6;
 	for(var i=0; i<map.objects.length; i++) { //game logic
 		var o = map.objects[i];
 		if(o.type==CANNONBALL || o.type==BULLET) {
@@ -288,7 +290,12 @@ function draw() {
 		}
 		else if(o.type==WAGON) {
 			var w = o;
-			if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) > look_distance*look_distance) { continue; }
+			var dist_squared = (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y)
+			if(!w.burned && dist_squared<nearest_goal_distance) {
+				nearest_goal = w;
+				nearest_goal_distance = dist_squared;
+			}
+			if( dist_squared > look_distance*look_distance) { continue; }
 			var x = me.x - me.sin_neg_a*60;
 			var y = me.y - me.cos_neg_a*60;
 			
@@ -430,6 +437,12 @@ function draw() {
 		g.restore();
 	}
 
+	g.beginPath();
+	g.moveTo(me.x, me.y);
+	g.lineTo(nearest_goal.x, nearest_goal.y);
+	g.strokeStyle = '#00A';
+	g.stroke();
+	
 	g.restore();
 	
 	me.sprite_cycle_index += dt*me.sprite_cycle_speed*me.v/me.max_v;
