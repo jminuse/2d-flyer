@@ -9,6 +9,19 @@
 <script>
 pi = Math.PI;
 
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  this.beginPath();
+  this.moveTo(x+r, y);
+  this.arcTo(x+w, y,   x+w, y+h, r);
+  this.arcTo(x+w, y+h, x,   y+h, r);
+  this.arcTo(x,   y+h, x,   y,   r);
+  this.arcTo(x,   y,   x+w, y,   r);
+  this.closePath();
+  return this;
+}
+
 var display_box = document.getElementById('display');
 function display(s, t, color) {
 	if(!t) t=2000;
@@ -18,6 +31,8 @@ function display(s, t, color) {
 	display_box.style.display = 'block';
 	setTimeout("display_box.style.display='none';", t);
 }
+
+NONE = 0; BULLET = 1; CANNONBALL = 2;
 
 var Player = (function() {
 	function Player() {
@@ -78,11 +93,21 @@ var Map = (function() {
 					var yyy = yy+Math.sin(theta)*100;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) continue;
 					this.cannons.push( {x:xxx, y:yyy, a:-theta-pi/2, cooldown:0.0} );
+					
+					xxx = xx+Math.cos(theta)*50;
+					yyy = yy+Math.sin(theta)*50;
+					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) continue;
+					this.infantry.push( {x:xxx, y:yyy, a:-theta-pi/2, cooldown:0.0} );
+					
+					xxx = xx+Math.cos(theta)*150;
+					yyy = yy+Math.sin(theta)*150;
+					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) continue;
+					this.cavalry.push( {x:xxx, y:yyy, a:-theta-pi/2, cooldown:0.0} );
 				}
 			}
 		}
 
-		for(var i=0; i<10; i++) { this.projectiles.push( {x:-1000.0, y:-1000.0, dx:0.0, dy:0.0} ); }
+		for(var i=0; i<10; i++) { this.projectiles.push( {x:-1000.0, y:-1000.0, dx:0.0, dy:0.0, type:NONE} ); }
 	}
 	return Map;
 })();
@@ -181,6 +206,7 @@ function draw() {
 		else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
 			var kinetic_energy = (p.dx-me.dx)*(p.dx-me.dx) + (p.dy-me.dy)*(p.dy-me.dy);
 			var damage = 5*((30.0*kinetic_energy)|0);
+			if(p.type==BULLET) damage = ((5.0*kinetic_energy)|0);
 			if(damage==0) continue;
 			p.x = -1000.0; p.y = -1000.0;
 			me.health -= damage;
@@ -219,6 +245,7 @@ function draw() {
 				valid_projectile.y = c.y - 20*cos_a;
 				valid_projectile.dx = -0.2*sin_a;
 				valid_projectile.dy = -0.2*cos_a;
+				valid_projectile.type=CANNONBALL;
 				c.cooldown = 1000;
 			}
 		}
@@ -266,11 +293,11 @@ function draw() {
 		g.fillRect(h.x-200,h.y-200,400,400);
 	}
 	
-	for (var x=0; x<map.width; x+=50){
+	for (var x=0; x<map.width+1; x+=50){
 		g.moveTo(x, 0);
 		g.lineTo(x, map.height);
 	}
-	for(var y=0; y<map.height; y+=50){
+	for(var y=0; y<map.height+1; y+=50){
 		g.moveTo(0, y);
 		g.lineTo(map.width, y);
 	}
@@ -319,8 +346,18 @@ function draw() {
 		g.save();
 		g.translate(n.x, n.y);
 		g.rotate(-n.a);
-		g.fillStyle = '#F00';
-		//g.fillRect(0, 0, 30, 30);
+		if(n.cooldown==0.0) { //draw musket
+			g.fillStyle='#777';
+			g.fillRect(1,-24,2,24);
+			g.fillStyle='brown';
+			g.fillRect(1,-18,2,18);
+		}
+		g.fillStyle='#F00';
+		g.fillRect(-6,-3,12,6);
+		g.beginPath();
+		g.arc(0, 0, 4, 0, 2*pi);
+		g.fillStyle='#FF5';
+		g.fill();
 		g.restore();
 	}
 	
@@ -330,8 +367,22 @@ function draw() {
 		g.save();
 		g.translate(c.x, c.y);
 		g.rotate(-c.a);
-		g.fillStyle = '#F92';
-		//g.fillRect(0, 0, 20, 40);
+		g.fillStyle='#631';
+		//g.fillRect(-6, -18, 6*2, 18*2);
+		g.roundRect(-6, -18, 6*2, 18*2, 4).fill();
+		g.roundRect(-3, -28, 6, 12, 3).fill();
+		if(c.cooldown==0.0) { //draw musket
+			g.fillStyle='#777';
+			g.fillRect(1,-24,2,24);
+			g.fillStyle='brown';
+			g.fillRect(1,-18,2,18);
+		}
+		g.fillStyle='#F00';
+		g.fillRect(-6,-3,12,6);
+		g.beginPath();
+		g.arc(0, 0, 4, 0, 2*pi);
+		g.fillStyle='#FF5';
+		g.fill();
 		g.restore();
 	}
 	
@@ -340,8 +391,14 @@ function draw() {
 		if( (p.x-me.x)*(p.x-me.x) + (p.y-me.y)*(p.y-me.y) > look_distance*look_distance ) continue;
 		if( p.x == -1000.0 ) continue;
 		g.beginPath();
-		g.arc(p.x, p.y, 5, 0, 2*pi);
-		g.fillStyle='#222';
+		if(p.type==CANNONBALL) {
+			g.arc(p.x, p.y, 5, 0, 2*pi);
+			g.fillStyle='#222';
+		}
+		else if(p.type==BULLET) {
+			g.arc(p.x, p.y, 2, 0, 2*pi);
+			g.fillStyle='#222';
+		}
 		g.fill();
 	}
 	g.restore();
