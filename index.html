@@ -7,7 +7,6 @@
 	<img src="dragon.png" style="display:none;" id='dragon-image'/>
 	<img src="dragon_spritesheet.png" style="display:none;" id='dragon-spritesheet'/>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
-	<div style='position:absolute; top:1em; right:1em; color:red;' id='health'></div>
 	<div style='position:absolute; top:1em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
 <script>
 pi = Math.PI;
@@ -44,7 +43,8 @@ var Player = (function() {
 		this.fire_size = 0.0;
 		this.max_fire_size = 100.0;
 		this.fire_speed = 5.0;
-		this.health = 100;
+		this.max_health = 100;
+		this.health = this.max_health;
 		this.sprite_cycle_length = 10.0;
 		this.sprite_cycle_index = 0.0;
 		this.sprite_cycle_speed = 0.02;
@@ -126,8 +126,6 @@ var dragon_image = document.getElementById('dragon-image');
 var dragon_spritesheet = document.getElementById('dragon-spritesheet');
 
 info = document.getElementById('info');
-health_display = document.getElementById('health');
-health_display.innerHTML = me.health;
 display('Objective: burn all supply wagons', 3000);
 
 previous_time = +new Date();
@@ -188,14 +186,14 @@ function draw() {
 			p.x = -1000.0; p.y = -1000.0;
 		}
 		else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
-			p.x = -1000.0; p.y = -1000.0;
 			var kinetic_energy = (p.dx-me.dx)*(p.dx-me.dx) + (p.dy-me.dy)*(p.dy-me.dy);
-			me.health -= 5*((20.0*kinetic_energy)|0);
-			health_display.innerHTML = me.health;
+			var damage = 5*((30.0*kinetic_energy)|0);
+			if(damage==0) continue;
+			p.x = -1000.0; p.y = -1000.0;
+			me.health -= damage;
 			if(me.health<=0) {
 				map.defeat = true;
 				display('We are defeated!<br>Pull back!', 5000);
-				return;
 			}
 		}
 	}
@@ -352,6 +350,10 @@ function draw() {
 	if(me.sprite_cycle_index>me.sprite_cycle_length) me.sprite_cycle_index=0;
 	var index = me.sprite_cycle_index|0;
 	g.drawImage(dragon_spritesheet, index*75-2, 0, 75, 75, canvas.width/2/scale-me.z*100*scale/2, canvas.height/scale-50-me.z*80*scale/2, me.z*100*scale, me.z*80*scale);
+	
+	//health bar
+	g.fillStyle = '#F00';
+	g.fillRect(5, 5, (canvas.width/scale-5*2)*Math.max(me.health/me.max_health, 0), 5);
 }
 draw();
 
