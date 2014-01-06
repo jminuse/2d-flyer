@@ -70,7 +70,7 @@ var Map = (function() {
 				var yy = y+Math.random()*50;
 				this.wagons.push( {x:xx, y:yy, a:Math.random()*2*pi, burned:false} );
 				
-				for(var theta=0; theta<2*pi; theta+=2*pi/10) {
+				for(var theta=0; theta<2*pi; theta+=2*pi/1) {
 					var xxx = xx+Math.cos(theta)*100;
 					var yyy = yy+Math.sin(theta)*100;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) continue;
@@ -196,7 +196,11 @@ function draw() {
 			var y = me.y - me.cos_neg_a*60;
 			
 			var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
-			c.a += (c.a < aim_angle ? 0.0004 : -0.0004)*dt;
+			var dif = c.a-aim_angle;
+			if(Math.abs(dif)>Math.abs(c.a-aim_angle+2*pi)) dif = c.a-aim_angle+2*pi;
+			if(Math.abs(dif)>Math.abs(c.a-aim_angle-2*pi)) dif = c.a-aim_angle-2*pi;
+		
+			c.a += (dif<0.0 ? 0.0004 : -0.0004)*dt;
 			if(c.a<-pi) c.a+=2*pi;
 			else if(c.a>pi) c.a-=2*pi;
 			
