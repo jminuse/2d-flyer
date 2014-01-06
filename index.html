@@ -4,7 +4,6 @@
 </head>
 <body style="background-color:black; color:#AAA;">
 	<canvas id="myCanvas" style="display:block; position:absolute; top:0px; left:50%;"></canvas>
-	<img src="dragon.png" style="display:none;" id='dragon-image'/>
 	<img src="dragon_spritesheet.png" style="display:none;" id='dragon-spritesheet'/>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
 	<div style='position:absolute; top:1em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
@@ -359,7 +358,28 @@ function draw() {
 	me.sprite_cycle_index += dt*me.sprite_cycle_speed;
 	if(me.sprite_cycle_index>me.sprite_cycle_length) me.sprite_cycle_index=0;
 	var index = me.sprite_cycle_index|0;
-	g.drawImage(dragon_spritesheet, index*75-2, 0, 75, 75, canvas.width/2/scale-me.z*100*scale/2, canvas.height/scale-50-me.z*80*scale/2, me.z*100*scale, me.z*80*scale);
+	//g.drawImage(dragon_spritesheet, index*75-2, 0, 75, 75, canvas.width/2/scale-me.z*100*scale/2, canvas.height/scale-50-me.z*80*scale/2, me.z*100*scale, me.z*80*scale);
+	
+	
+	g.save();
+	g.translate(canvas.width/2/scale, canvas.height/scale-80);
+	g.beginPath();
+	g.moveTo(0,0);
+	g.lineTo(48,0);
+	g.lineTo(36,20);
+	g.lineTo(24,5);
+	g.lineTo(12,20);
+	g.lineTo(0,0);
+	g.lineTo(-48,0);
+	g.lineTo(-36,20);
+	g.lineTo(-24,5);
+	g.lineTo(-12,20);
+	g.lineTo(0,0);
+	g.bezierCurveTo(10, 20, -10, 30, 0, 50);
+	g.bezierCurveTo(-20, 30, 20, 20, 0, 0);
+	g.fillStyle = '#000';
+	g.fill();
+	g.restore();
 	
 	//health bar
 	g.fillStyle = '#F00';
