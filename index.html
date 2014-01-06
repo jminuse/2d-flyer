@@ -74,7 +74,7 @@ var Map = (function() {
 					var xxx = xx+Math.cos(theta)*100;
 					var yyy = yy+Math.sin(theta)*100;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) continue;
-					this.cannons.push( {x:xxx, y:yyy, a:theta-pi/2, cooldown:0.0} );
+					this.cannons.push( {x:xxx, y:yyy, a:-theta-pi/2, cooldown:0.0} );
 				}
 			}
 		}
