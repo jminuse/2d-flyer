@@ -434,9 +434,12 @@ function draw() {
 		g.restore();
 	}
 
+	var xx = nearest_goal.x-me.x;
+	var yy = nearest_goal.y-me.y;
+	var L = Math.sqrt(xx*xx + yy*yy);
 	g.beginPath();
-	g.moveTo(me.x, me.y);
-	g.lineTo(nearest_goal.x, nearest_goal.y);
+	g.moveTo(me.x + 15*xx/L, me.y + 15*yy/L);
+	g.lineTo(me.x + 50*xx/L, me.y + 50*yy/L);
 	g.strokeStyle = '#00A';
 	g.stroke();
 	
@@ -450,7 +453,7 @@ function draw() {
 	var s = 1+0.3*q;
 	q *= 0.1;
 	g.save();
-	g.translate(canvas.width/2/scale, canvas.height/scale-80);
+	g.translate(canvas.width/2/scale, canvas.height/scale-50);
 	
 	g.beginPath();
 	g.moveTo(0,-10);
