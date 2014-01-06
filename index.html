@@ -78,7 +78,9 @@ var MapObject = (function() {
 		this.v = 0.0;
 		this.dx = 0.0;
 		this.dy = 0.0;
-		if(type==CAVALRY) { this.v = 0.1; }
+		if(type==CAVALRY) { this.v = 0.1; this.da = 0.002; }
+		else if(type==INFANTRY) { this.v = 0.02; this.da = 0.002; }
+		else if(type==CANNON) { this.da = 0.0002; }
 	}
 	return MapObject;
 })();
@@ -255,12 +257,7 @@ function draw() {
 			if(Math.abs(dif)>Math.abs(c.a-aim_angle+2*pi)) { dif = c.a-aim_angle+2*pi; }
 			if(Math.abs(dif)>Math.abs(c.a-aim_angle-2*pi)) { dif = c.a-aim_angle-2*pi; }
 	
-			if(c.type==CANNON) {
-				c.a += (dif<0.0 ? 0.0002 : -0.0002)*dt;
-			}
-			else {
-				c.a += (dif<0.0 ? 0.002 : -0.002)*dt;
-			}
+			c.a += (dif<0.0 ? c.da : -c.da)*dt;
 			if(c.a<-pi) { c.a+=2*pi; }
 			else if(c.a>pi) { c.a-=2*pi; }
 		
