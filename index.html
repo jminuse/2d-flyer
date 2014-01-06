@@ -234,6 +234,7 @@ function draw() {
 		}
 		else if(o.type==CANNON || o.type==INFANTRY || o.type==CAVALRY) {
 			var c = o;
+			if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance) { continue; }
 			
 			c.dx = -c.v*Math.sin(c.a);
 			c.dy = -c.v*Math.cos(c.a);
@@ -244,7 +245,6 @@ function draw() {
 			if(o.x>map.width-0) { o.x = map.width-0; }
 			if(o.y>map.height-0) { o.y = map.height-0; }
 			
-			if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance) { continue; }
 			var x = me.x - me.sin_neg_a*60;
 			var y = me.y - me.cos_neg_a*60;
 		
@@ -262,7 +262,8 @@ function draw() {
 			if(c.a<-pi) { c.a+=2*pi; }
 			else if(c.a>pi) { c.a-=2*pi; }
 		
-			c.cooldown -= dt;
+			if(c.cooldown>0.0) { c.cooldown -= dt; }
+			else { c.cooldown = 0.0; }
 		
 			if( (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < me.fire_size*me.fire_size*0.7*0.7 ) {
 				c.x = -1000.0; c.y = -1000.0;
@@ -325,6 +326,7 @@ function draw() {
 		g.fillRect(h.x-200,h.y-200,400,400);
 	}
 	
+	g.beginPath();
 	for (var x=0; x<map.width+1; x+=50) {
 		g.moveTo(x, 0);
 		g.lineTo(x, map.height);
@@ -378,6 +380,12 @@ function draw() {
 				g.fillStyle='brown';
 				g.fillRect(1,-18,2,18);
 			}
+			else { //reload
+				g.fillStyle='#777';
+				g.fillRect(1,-12,2,12);
+				g.fillStyle='brown';
+				g.fillRect(1,-9,2,9);
+			}
 			g.fillStyle='#F00';
 			g.fillRect(-6,-3,12,6);
 			g.beginPath();
@@ -393,12 +401,12 @@ function draw() {
 			//g.fillRect(-6, -18, 6*2, 18*2);
 			g.roundRect(-6, -18, 6*2, 18*2, 4).fill();
 			g.roundRect(-3, -28, 6, 12, 3).fill();
-			if(c.cooldown===0.0) { //draw musket
-				g.fillStyle='#777';
-				g.fillRect(1,-24,2,24);
-				g.fillStyle='brown';
-				g.fillRect(1,-18,2,18);
-			}
+
+			g.fillStyle='#777';
+			g.fillRect(1,-24,2,24);
+			g.fillStyle='brown';
+			g.fillRect(1,-18,2,18);
+			
 			g.fillStyle='#F00';
 			g.fillRect(-6,-3,12,6);
 			g.beginPath();
