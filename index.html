@@ -10,8 +10,8 @@
 pi = Math.PI;
 
 CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-  if (w < 2 * r) r = w / 2;
-  if (h < 2 * r) r = h / 2;
+  if (w < 2 * r) { r = w / 2; }
+  if (h < 2 * r) { r = h / 2; }
   this.beginPath();
   this.moveTo(x+r, y);
   this.arcTo(x+w, y,   x+w, y+h, r);
@@ -20,19 +20,17 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
   this.arcTo(x,   y,   x+w, y,   r);
   this.closePath();
   return this;
-}
+};
 
 var display_box = document.getElementById('display');
 function display(s, t, color) {
-	if(!t) t=2000;
-	if(!color) color='red';
+	if(!t) { t=2000; }
+	if(!color) { color='red'; }
 	display_box.style.color = color;
 	display_box.innerHTML = s;
 	display_box.style.display = 'block';
 	setTimeout("display_box.style.display='none';", t);
 }
-
-NONE = 0; BULLET = 1; CANNONBALL = 2;
 
 var Player = (function() {
 	function Player() {
@@ -65,6 +63,22 @@ var Player = (function() {
 	return Player;
 })();
 
+NONE = 0; BULLET = 1; CANNONBALL = 2;
+CANNON = 3; WAGON = 4; INFANTRY = 5;
+CAVALRY = 6; PROJECTILES = 7;
+
+var MapObject = (function() {
+	function MapObject(type,x,y,a,burned,cooldown) {
+		this.type = type;
+		this.x = x || -1000.0;
+		this.y = y || -1000.0;
+		this.a = a || 0.0;
+		this.burned = burned || false;
+		this.cooldown = cooldown || 0.0;
+	}
+	return MapObject;
+})();
+
 var Map = (function() {
 	function Map() {
 		this.width = 2000;
@@ -72,42 +86,40 @@ var Map = (function() {
 		this.victory = false;
 		this.defeat = false;
 		this.hills = [];
-		this.cannons = [];
-		this.wagons = [];
-		this.infantry = [];
-		this.cavalry = [];
-		this.projectiles = [];
+		this.objects = [];
+		this.wagon_count = 0;
 
 		for(var i=0; i<0; i++) {
 			this.hills.push( {x:Math.random()*this.width, y:Math.random()*this.height} );
 		}
+		
+		for(var j=0; j<10; j++) { this.objects.push( new MapObject(CANNONBALL) ); }
 
 		for(var x=0; x<this.width; x+=550) {
 			for(var y=0; y<this.height; y+=550) {
 				var xx = x+Math.random()*50;
 				var yy = y+Math.random()*50;
-				this.wagons.push( {x:xx, y:yy, a:Math.random()*2*pi, burned:false} );
+				this.objects.push( new MapObject(WAGON,xx,yy,Math.random()*2*pi) );
+				this.wagon_count += 1;
 				
 				for(var theta=0; theta<2*pi; theta+=2*pi/10) {
 					var xxx = xx+Math.cos(theta)*100;
 					var yyy = yy+Math.sin(theta)*100;
-					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) continue;
-					this.cannons.push( {x:xxx, y:yyy, a:-theta-pi/2, cooldown:0.0} );
+					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
+					this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-pi/2) );
 					
 					xxx = xx+Math.cos(theta)*50;
 					yyy = yy+Math.sin(theta)*50;
-					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) continue;
-					this.infantry.push( {x:xxx, y:yyy, a:-theta-pi/2, cooldown:0.0} );
+					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
+					this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-pi/2) );
 					
 					xxx = xx+Math.cos(theta)*150;
 					yyy = yy+Math.sin(theta)*150;
-					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) continue;
-					this.cavalry.push( {x:xxx, y:yyy, a:-theta-pi/2, cooldown:0.0} );
+					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
+					this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-pi/2) );
 				}
 			}
 		}
-
-		for(var i=0; i<10; i++) { this.projectiles.push( {x:-1000.0, y:-1000.0, dx:0.0, dy:0.0, type:NONE} ); }
 	}
 	return Map;
 })();
@@ -121,10 +133,10 @@ for(var i=0; i<256; i++) {
 }
 document.onkeydown = function(k) {
 	keys[k.which]=true;
-}
+};
 document.onkeyup = function(k) {
 	keys[k.which]=false;
-}
+};
 LEFT = 37; RIGHT = 39;
 UP = 38; DOWN = 40;
 SPACE = 32;
@@ -140,8 +152,6 @@ display_box.style.fontSize = (40*scale)+'px';
 var look_distance = 480;
 var g=canvas.getContext("2d");
 canvas.style.backgroundColor = "#0A1";
-var dragon_image = document.getElementById('dragon-image');
-var dragon_spritesheet = document.getElementById('dragon-spritesheet');
 
 info = document.getElementById('info');
 display('Objective: burn all supply wagons', 3000);
@@ -152,7 +162,7 @@ function draw() {
 	current_time = +new Date();
 	dt = current_time - previous_time;
 	previous_time = current_time;
-	if(dt>500) return; //pause while offscreen
+	if(dt>500) { return; } //pause while offscreen
 	
 	if(map.defeat) { //defeat
 		return;
@@ -161,80 +171,80 @@ function draw() {
 		return;
 	}
 	
-	if(keys[LEFT] && me.da>-me.max_da) me.da -= me.dda;
-	else if(keys[RIGHT] && me.da<me.max_da) me.da += me.dda;
-	else if(!keys[LEFT] && !keys[RIGHT]) me.da = 0.0;
+	if(keys[LEFT] && me.da>-me.max_da) { me.da -= me.dda; }
+	else if(keys[RIGHT] && me.da<me.max_da) { me.da += me.dda; }
+	else if(!keys[LEFT] && !keys[RIGHT]) { me.da = 0.0; }
 	
-	if(keys[DOWN] && me.dv>-me.max_dv) me.dv -= me.ddv*2;
-	else if(keys[UP] && me.dv<me.max_dv) me.dv += me.ddv;
-	else if(!keys[DOWN] && !keys[UP]) me.dv = 0.0;
+	if(keys[DOWN] && me.dv>-me.max_dv) { me.dv -= me.ddv*2; }
+	else if(keys[UP] && me.dv<me.max_dv) { me.dv += me.ddv; }
+	else if(!keys[DOWN] && !keys[UP]) { me.dv = 0.0; }
 	
 	if(keys[SPACE]) {
 		me.fire_size += me.fire_speed;
-		if(me.fire_size==me.max_fire_size) me.fire_size=0.0;
-		if(me.fire_size>me.max_fire_size) me.fire_size=me.max_fire_size;
+		if(me.fire_size==me.max_fire_size) { me.fire_size=0.0; }
+		if(me.fire_size>me.max_fire_size) { me.fire_size=me.max_fire_size; }
 	}
-	else me.fire_size = 0.0;
+	else { me.fire_size = 0.0; }
 	
 	me.a += dt*me.da;
-	if(me.da!=0.0) {
+	if(me.da!==0.0) {
 		me.sin_neg_a = Math.sin(-me.a);
 		me.cos_neg_a = Math.cos(-me.a);
 	}
 	me.v += dt*me.dv;
-	if(me.v>me.max_v) me.v = me.max_v;
-	else if(me.v<me.max_v*0.3) me.v = me.max_v*0.3;
+	if(me.v>me.max_v) { me.v = me.max_v; }
+	else if(me.v<me.max_v*0.3) { me.v = me.max_v*0.3; }
 	
 	me.dx = -me.v*me.sin_neg_a;
 	me.dy = -me.v*me.cos_neg_a;
 	me.x += dt*me.dx;
 	me.y += dt*me.dy;
-	if(me.x<0.0) me.x = 0.0;
-	if(me.y<0.0) me.y = 0.0;
-	if(me.x>map.width-0) me.x = map.width-0;
-	if(me.y>map.height-0) me.y = map.height-0;
+	if(me.x<0.0) { me.x = 0.0; }
+	if(me.y<0.0) { me.y = 0.0; }
+	if(me.x>map.width-0) { me.x = map.width-0; }
+	if(me.y>map.height-0) { me.y = map.height-0; }
 	
 	var valid_projectile = null;
-	for(var i=0; i<map.projectiles.length; i++) {
-		var p = map.projectiles[i];
-		if( p.x == -1000.0 ) { valid_projectile = p; continue; }
-		p.x += p.dx*dt;
-		p.y += p.dy*dt;
-		if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) > look_distance*look_distance) {
-			p.x = -1000.0; p.y = -1000.0;
-		}
-		else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
-			var kinetic_energy = (p.dx-me.dx)*(p.dx-me.dx) + (p.dy-me.dy)*(p.dy-me.dy);
-			var damage = 5*((30.0*kinetic_energy)|0);
-			if(p.type==BULLET) damage = ((5.0*kinetic_energy)|0);
-			if(damage==0) continue;
-			p.x = -1000.0; p.y = -1000.0;
-			me.health -= damage;
-			if(me.health<=0) {
-				map.defeat = true;
-				display('We are defeated!<br>Pull back!', 5000);
+	for(var i=0; i<map.objects.length; i++) { //game logic
+		var o = map.objects[i];
+		if(o.type==CANNONBALL || o.type==BULLET) {
+			var p = o;
+			if( p.x == -1000.0 ) { valid_projectile = p; continue; }
+			p.x += p.dx*dt;
+			p.y += p.dy*dt;
+			if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) > look_distance*look_distance) {
+				p.x = -1000.0; p.y = -1000.0;
+			}
+			else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
+				var kinetic_energy = (p.dx-me.dx)*(p.dx-me.dx) + (p.dy-me.dy)*(p.dy-me.dy);
+				var damage = 5*((30.0*kinetic_energy)|0);
+				if(p.type==BULLET) { damage = ((5.0*kinetic_energy)|0); }
+				if(damage===0) { continue; }
+				p.x = -1000.0; p.y = -1000.0;
+				me.health -= damage;
+				if(me.health<=0) {
+					map.defeat = true;
+					display('We are defeated!<br>Pull back!', 5000);
+				}
 			}
 		}
-	}
-	
-	for(var i=0; i<map.cannons.length; i++) {
-		var c = map.cannons[i];
-		
-		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) < look_distance*look_distance) {
+		else if(o.type==CANNON || o.type==INFANTRY || o.type==CAVALRY) {
+			var c = o;
+			if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance) { continue; }
 			var x = me.x - me.sin_neg_a*60;
 			var y = me.y - me.cos_neg_a*60;
-			
+		
 			var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
 			var dif = c.a-aim_angle;
-			if(Math.abs(dif)>Math.abs(c.a-aim_angle+2*pi)) dif = c.a-aim_angle+2*pi;
-			if(Math.abs(dif)>Math.abs(c.a-aim_angle-2*pi)) dif = c.a-aim_angle-2*pi;
-		
+			if(Math.abs(dif)>Math.abs(c.a-aim_angle+2*pi)) { dif = c.a-aim_angle+2*pi; }
+			if(Math.abs(dif)>Math.abs(c.a-aim_angle-2*pi)) { dif = c.a-aim_angle-2*pi; }
+	
 			c.a += (dif<0.0 ? 0.0002 : -0.0002)*dt;
-			if(c.a<-pi) c.a+=2*pi;
-			else if(c.a>pi) c.a-=2*pi;
-			
+			if(c.a<-pi) { c.a+=2*pi; }
+			else if(c.a>pi) { c.a-=2*pi; }
+		
 			c.cooldown -= dt;
-			
+		
 			if( (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < me.fire_size*me.fire_size*0.7*0.7 ) {
 				c.x = -1000.0; c.y = -1000.0;
 			}
@@ -243,29 +253,32 @@ function draw() {
 				var cos_a = Math.cos(c.a);
 				valid_projectile.x = c.x - 20*sin_a;
 				valid_projectile.y = c.y - 20*cos_a;
-				valid_projectile.dx = -0.2*sin_a;
-				valid_projectile.dy = -0.2*cos_a;
-				valid_projectile.type=CANNONBALL;
-				c.cooldown = 1000;
+				if(c.type==CANNON) {
+					valid_projectile.dx = -0.2*sin_a;
+					valid_projectile.dy = -0.2*cos_a;
+					valid_projectile.type=CANNONBALL;
+				}
+				else {
+					valid_projectile.dx = -0.4*sin_a;
+					valid_projectile.dy = -0.4*cos_a;
+					valid_projectile.type=BULLET;
+				}
+				c.cooldown = 3000;
 			}
 		}
-	}
-	
-	for(var i=0; i<map.wagons.length; i++) {
-		var w = map.wagons[i];
-
-		if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) < look_distance*look_distance) {
+		else if(o.type==WAGON) {
+			var w = o;
+			if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) > look_distance*look_distance) { continue; }
 			var x = me.x - me.sin_neg_a*60;
 			var y = me.y - me.cos_neg_a*60;
 			
 			if( (w.x-x)*(w.x-x) + (w.y-y)*(w.y-y) < me.fire_size*me.fire_size*1.0*1.0 ) {
 				w.burned = true;
 				var burned_count = 0;
-				for(var j=0; j<map.wagons.length; j++) {
-					if( map.wagons[j].burned )
-						burned_count+=1;
+				for(var j=0; j<map.objects.length; j++) {
+					if( map.objects[j].burned ) { burned_count+=1; }
 				}
-				if(burned_count==map.wagons.length) {
+				if(burned_count==map.wagon_count) {
 					map.victory = true;
 					display('Victory!', 10000, 'blue');
 				}
@@ -284,7 +297,7 @@ function draw() {
 	
 	for(var i=0; i<map.hills.length; i++) {
 		var h = map.hills[i];
-		if( (h.x-me.x)*(h.x-me.x) + (h.y-me.y)*(h.y-me.y) > look_distance*look_distance ) continue;
+		if( (h.x-me.x)*(h.x-me.x) + (h.y-me.y)*(h.y-me.y) > look_distance*look_distance ) { continue; }
 		
 		var grd=g.createRadialGradient(h.x,h.y,5,h.x,h.y,200);//(75,75,5,90,90,100);
 		grd.addColorStop(0,'#0A2');
@@ -293,114 +306,103 @@ function draw() {
 		g.fillRect(h.x-200,h.y-200,400,400);
 	}
 	
-	for (var x=0; x<map.width+1; x+=50){
+	for (var x=0; x<map.width+1; x+=50) {
 		g.moveTo(x, 0);
 		g.lineTo(x, map.height);
 	}
-	for(var y=0; y<map.height+1; y+=50){
+	for(var y=0; y<map.height+1; y+=50) {
 		g.moveTo(0, y);
 		g.lineTo(map.width, y);
 	}
 	g.strokeStyle = "#00A";
 	g.stroke();
 	
-	for(var i=0; i<map.cannons.length; i++) {
-		var c = map.cannons[i];
-		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance ) continue;
+	for(var i=0; i<map.objects.length; i++) {
+		var o = map.objects[i];
+		if( (o.x-me.x)*(o.x-me.x) + (o.y-me.y)*(o.y-me.y) > look_distance*look_distance ) { continue; }
 		g.save();
-		g.translate(c.x, c.y);
-		g.rotate(-c.a);
-		var cannon_width = 10;
-		var wheel_width = 5;
-		var wheel_length = 30;
-		var cannon_length = 40;
-		g.fillStyle='#961';
-		g.fillRect(cannon_width/2+3, -wheel_length/2, wheel_width, wheel_length);
-		g.fillRect(-cannon_width/2-wheel_width-3, -wheel_length/2, wheel_width, wheel_length);
-		g.fillRect(-cannon_width/2-3, -5, cannon_width+2*3, 10);
-		g.fillStyle='#444';
-		g.fillRect(-cannon_width/2, -12-wheel_length/2, cannon_width, cannon_length);
-		g.restore();
-	}
-	
-	for(var i=0; i<map.wagons.length; i++) {
-		var w = map.wagons[i];
-		if( (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y) > look_distance*look_distance ) continue;
-		g.save();
-		g.translate(w.x, w.y);
-		g.rotate(-w.a);
-		g.fillStyle = w.burned ? '#000' : '#851';
-		g.fillRect(-15, -30, 30, 60);
+		if(o.type==CANNON) {
+			var c = o;
+			g.translate(c.x, c.y);
+			g.rotate(-c.a);
+			var cannon_width = 10;
+			var wheel_width = 5;
+			var wheel_length = 30;
+			var cannon_length = 40;
+			g.fillStyle='#961';
+			g.fillRect(cannon_width/2+3, -wheel_length/2, wheel_width, wheel_length);
+			g.fillRect(-cannon_width/2-wheel_width-3, -wheel_length/2, wheel_width, wheel_length);
+			g.fillRect(-cannon_width/2-3, -5, cannon_width+2*3, 10);
+			g.fillStyle='#444';
+			g.fillRect(-cannon_width/2, -12-wheel_length/2, cannon_width, cannon_length);
+		}
+		else if(o.type==WAGON) {
+			var w = o;
+			g.translate(w.x, w.y);
+			g.rotate(-w.a);
+			g.fillStyle = w.burned ? '#000' : '#851';
+			g.fillRect(-15, -30, 30, 60);
 		
-		g.fillRect(15+1, 5, 3, 20);
-		g.fillRect(-15-3-1, 5, 3, 20);
+			g.fillRect(15+1, 5, 3, 20);
+			g.fillRect(-15-3-1, 5, 3, 20);
 		
-		g.fillRect(15+1, -25, 3, 20);
-		g.fillRect(-15-3-1, -25, 3, 20);
+			g.fillRect(15+1, -25, 3, 20);
+			g.fillRect(-15-3-1, -25, 3, 20);
+		}
+		else if(o.type==INFANTRY) {
+			var n = o;
+			g.translate(n.x, n.y);
+			g.rotate(-n.a);
+			if(n.cooldown===0.0) { //draw musket
+				g.fillStyle='#777';
+				g.fillRect(1,-24,2,24);
+				g.fillStyle='brown';
+				g.fillRect(1,-18,2,18);
+			}
+			g.fillStyle='#F00';
+			g.fillRect(-6,-3,12,6);
+			g.beginPath();
+			g.arc(0, 0, 4, 0, 2*pi);
+			g.fillStyle='#FF5';
+			g.fill();
+		}
+		else if(o.type==CAVALRY) {
+			var c = o;
+			g.translate(c.x, c.y);
+			g.rotate(-c.a);
+			g.fillStyle='#631';
+			//g.fillRect(-6, -18, 6*2, 18*2);
+			g.roundRect(-6, -18, 6*2, 18*2, 4).fill();
+			g.roundRect(-3, -28, 6, 12, 3).fill();
+			if(c.cooldown===0.0) { //draw musket
+				g.fillStyle='#777';
+				g.fillRect(1,-24,2,24);
+				g.fillStyle='brown';
+				g.fillRect(1,-18,2,18);
+			}
+			g.fillStyle='#F00';
+			g.fillRect(-6,-3,12,6);
+			g.beginPath();
+			g.arc(0, 0, 4, 0, 2*pi);
+			g.fillStyle='#FF5';
+			g.fill();
+		}
+		else if(o.type==CANNONBALL || o.type==BULLET) {
+			var p = o;
+			g.beginPath();
+			if(p.type==CANNONBALL) {
+				g.arc(p.x, p.y, 5, 0, 2*pi);
+				g.fillStyle='#222';
+			}
+			else if(p.type==BULLET) {
+				g.arc(p.x, p.y, 2, 0, 2*pi);
+				g.fillStyle='#222';
+			}
+			g.fill();
+		}
 		g.restore();
 	}
-	
-	for(var i=0; i<map.infantry.length; i++) {
-		var n = map.infantry[i];
-		if( (n.x-me.x)*(n.x-me.x) + (n.y-me.y)*(n.y-me.y) > look_distance*look_distance ) continue;
-		g.save();
-		g.translate(n.x, n.y);
-		g.rotate(-n.a);
-		if(n.cooldown==0.0) { //draw musket
-			g.fillStyle='#777';
-			g.fillRect(1,-24,2,24);
-			g.fillStyle='brown';
-			g.fillRect(1,-18,2,18);
-		}
-		g.fillStyle='#F00';
-		g.fillRect(-6,-3,12,6);
-		g.beginPath();
-		g.arc(0, 0, 4, 0, 2*pi);
-		g.fillStyle='#FF5';
-		g.fill();
-		g.restore();
-	}
-	
-	for(var i=0; i<map.cavalry.length; i++) {
-		var c = map.cavalry[i];
-		if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance ) continue;
-		g.save();
-		g.translate(c.x, c.y);
-		g.rotate(-c.a);
-		g.fillStyle='#631';
-		//g.fillRect(-6, -18, 6*2, 18*2);
-		g.roundRect(-6, -18, 6*2, 18*2, 4).fill();
-		g.roundRect(-3, -28, 6, 12, 3).fill();
-		if(c.cooldown==0.0) { //draw musket
-			g.fillStyle='#777';
-			g.fillRect(1,-24,2,24);
-			g.fillStyle='brown';
-			g.fillRect(1,-18,2,18);
-		}
-		g.fillStyle='#F00';
-		g.fillRect(-6,-3,12,6);
-		g.beginPath();
-		g.arc(0, 0, 4, 0, 2*pi);
-		g.fillStyle='#FF5';
-		g.fill();
-		g.restore();
-	}
-	
-	for(var i=0; i<map.projectiles.length; i++) {
-		var p = map.projectiles[i];
-		if( (p.x-me.x)*(p.x-me.x) + (p.y-me.y)*(p.y-me.y) > look_distance*look_distance ) continue;
-		if( p.x == -1000.0 ) continue;
-		g.beginPath();
-		if(p.type==CANNONBALL) {
-			g.arc(p.x, p.y, 5, 0, 2*pi);
-			g.fillStyle='#222';
-		}
-		else if(p.type==BULLET) {
-			g.arc(p.x, p.y, 2, 0, 2*pi);
-			g.fillStyle='#222';
-		}
-		g.fill();
-	}
+
 	g.restore();
 	
 	g.fillStyle = '#F00';
@@ -410,7 +412,7 @@ function draw() {
 	g.fill();
 	g.fillStyle = '#a0a';
 	me.sprite_cycle_index += dt*me.sprite_cycle_speed;
-	if(me.sprite_cycle_index>me.sprite_cycle_length) me.sprite_cycle_index=0;
+	if(me.sprite_cycle_index>me.sprite_cycle_length) { me.sprite_cycle_index=0; }
 	var index = me.sprite_cycle_index|0;
 	
 	var q = Math.sin(2*pi*me.sprite_cycle_index/me.sprite_cycle_length);
