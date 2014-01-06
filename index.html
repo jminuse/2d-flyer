@@ -58,11 +58,16 @@ var Map = (function() {
 		this.height = 2000;
 		this.victory = false;
 		this.defeat = false;
+		this.hills = [];
 		this.cannons = [];
 		this.wagons = [];
 		this.infantry = [];
 		this.cavalry = [];
 		this.projectiles = [];
+
+		for(var i=0; i<0; i++) {
+			this.hills.push( {x:Math.random()*this.width, y:Math.random()*this.height} );
+		}
 
 		for(var x=0; x<this.width; x+=550) {
 			for(var y=0; y<this.height; y+=550) {
@@ -111,7 +116,7 @@ var scale = canvas.height/480;
 display_box.style.fontSize = (40*scale)+'px';
 var look_distance = 480;
 var g=canvas.getContext("2d");
-canvas.style.backgroundColor = "#0A2";
+canvas.style.backgroundColor = "#0A1";
 var dragon_image = document.getElementById('dragon-image');
 var dragon_spritesheet = document.getElementById('dragon-spritesheet');
 
@@ -251,6 +256,18 @@ function draw() {
 	g.rotate(-me.a);
 	g.translate(-canvas.width/2/scale, -canvas.height/scale+50);
 	g.translate(-me.x+canvas.width/2/scale, -me.y+canvas.height/scale-50);
+	
+	for(var i=0; i<map.hills.length; i++) {
+		var h = map.hills[i];
+		if( (h.x-me.x)*(h.x-me.x) + (h.y-me.y)*(h.y-me.y) > look_distance*look_distance ) continue;
+		
+		var grd=g.createRadialGradient(h.x,h.y,5,h.x,h.y,200);//(75,75,5,90,90,100);
+		grd.addColorStop(0,'#0A2');
+		grd.addColorStop(1,canvas.style.backgroundColor);
+		g.fillStyle=grd;
+		g.fillRect(h.x-200,h.y-200,400,400);
+	}
+	
 	for (var x=0; x<map.width; x+=50){
 		g.moveTo(x, 0);
 		g.lineTo(x, map.height);
