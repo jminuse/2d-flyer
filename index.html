@@ -25,17 +25,18 @@ function display(s, t, color) {
 var Player = (function() {
 	function Player() {
 		this.a = pi/2;
+		this.da = 0.0;
+		this.max_da = 0.001;
 		this.sin_neg_a = Math.sin(-this.a);
 		this.cos_neg_a = Math.cos(-this.a);
 		this.x = 1000.0;
 		this.y = 2000.0;
 		this.z = 1.0;
 		this.dz = 0.001;
-		this.max_v = 0.2;
-		this.v = this.max_v;
-		this.dv = 0.0003;
-		this.da = 0.0;
-		this.max_da = 0.001;
+		this.max_v = 0.3;
+		this.v = this.max_v*0.5;
+		this.dv = 0.000;
+		this.max_dv = 0.001;
 		this.fire_size = 0.0;
 		this.max_fire_size = 100.0;
 		this.fire_speed = 5.0;
@@ -139,8 +140,9 @@ function draw() {
 	else if(keys[RIGHT] && me.da<me.max_da) me.da += 0.0001;
 	else if(!keys[LEFT] && !keys[RIGHT]) me.da = 0.0;
 	
-	//if(keys[UP] && me.v==me.max_v) { me.v = 2.5*me.max_v;  } //dodge forward
-	//else if(keys[DOWN] && me.v>=me.max_v) { me.v = -0.5*me.max_v; } //dodge back
+	if(keys[DOWN] && me.dv>-me.max_dv) me.dv -= 0.0002;
+	else if(keys[UP] && me.dv<me.max_dv) me.dv += 0.0002;
+	else if(!keys[DOWN] && !keys[UP]) me.dv = 0.0;
 	
 	if(keys[SPACE]) {
 		me.fire_size += me.fire_speed;
@@ -154,8 +156,9 @@ function draw() {
 		me.sin_neg_a = Math.sin(-me.a);
 		me.cos_neg_a = Math.cos(-me.a);
 	}
-	//if( Math.abs(me.v-me.max_v) < 0.1*me.max_v) me.v = me.max_v;
-	//else me.v += dt*(me.v<me.max_v ? me.dv : -me.dv);
+	me.v += dt*me.dv;
+	if(me.v>me.max_v) me.v = me.max_v;
+	else if(me.v<me.max_v*0.2) me.v = me.max_v*0.2;
 	
 	me.x -= dt*me.v*me.sin_neg_a;
 	me.y -= dt*me.v*me.cos_neg_a;
