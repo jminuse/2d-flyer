@@ -27,16 +27,20 @@ var Player = (function() {
 		this.a = pi/2;
 		this.da = 0.0;
 		this.max_da = 0.001;
+		this.dda = 0.0001;
 		this.sin_neg_a = Math.sin(-this.a);
 		this.cos_neg_a = Math.cos(-this.a);
-		this.x = 1000.0;
-		this.y = 2000.0;
+		this.x = 0.0;
+		this.y = 500.0;
 		this.z = 1.0;
+		this.dx = 0.0;
+		this.dy = 0.0;
 		this.dz = 0.001;
 		this.max_v = 0.3;
 		this.v = this.max_v*0.5;
 		this.dv = 0.000;
 		this.max_dv = 0.001;
+		this.ddv = 0.0002;
 		this.fire_size = 0.0;
 		this.max_fire_size = 100.0;
 		this.fire_speed = 5.0;
@@ -50,8 +54,10 @@ var Player = (function() {
 
 var Map = (function() {
 	function Map() {
-		this.width = 5000;
-		this.height = 5000;
+		this.width = 2000;
+		this.height = 2000;
+		this.victory = false;
+		this.defeat = false;
 		this.cannons = [];
 		this.wagons = [];
 		this.infantry = [];
@@ -132,16 +138,19 @@ function draw() {
 	previous_time = current_time;
 	if(dt>500) return; //pause while offscreen
 	
-	if(me.health<=0) { //defeat
+	if(map.defeat) { //defeat
+		return;
+	}
+	if(map.victory) { //victory
 		return;
 	}
 	
-	if(keys[LEFT] && me.da>-me.max_da) me.da -= 0.0001;
-	else if(keys[RIGHT] && me.da<me.max_da) me.da += 0.0001;
+	if(keys[LEFT] && me.da>-me.max_da) me.da -= me.dda;
+	else if(keys[RIGHT] && me.da<me.max_da) me.da += me.dda;
 	else if(!keys[LEFT] && !keys[RIGHT]) me.da = 0.0;
 	
-	if(keys[DOWN] && me.dv>-me.max_dv) me.dv -= 0.0002;
-	else if(keys[UP] && me.dv<me.max_dv) me.dv += 0.0002;
+	if(keys[DOWN] && me.dv>-me.max_dv) me.dv -= me.ddv*2;
+	else if(keys[UP] && me.dv<me.max_dv) me.dv += me.ddv;
 	else if(!keys[DOWN] && !keys[UP]) me.dv = 0.0;
 	
 	if(keys[SPACE]) {
@@ -158,10 +167,12 @@ function draw() {
 	}
 	me.v += dt*me.dv;
 	if(me.v>me.max_v) me.v = me.max_v;
-	else if(me.v<me.max_v*0.2) me.v = me.max_v*0.2;
+	else if(me.v<me.max_v*0.3) me.v = me.max_v*0.3;
 	
-	me.x -= dt*me.v*me.sin_neg_a;
-	me.y -= dt*me.v*me.cos_neg_a;
+	me.dx = -me.v*me.sin_neg_a;
+	me.dy = -me.v*me.cos_neg_a;
+	me.x += dt*me.dx;
+	me.y += dt*me.dy;
 	if(me.x<0.0) me.x = 0.0;
 	if(me.y<0.0) me.y = 0.0;
 	if(me.x>map.width-0) me.x = map.width-0;
@@ -178,9 +189,11 @@ function draw() {
 		}
 		else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
 			p.x = -1000.0; p.y = -1000.0;
-			me.health -= 20;
+			var kinetic_energy = (p.dx-me.dx)*(p.dx-me.dx) + (p.dy-me.dy)*(p.dy-me.dy);
+			me.health -= 5*((20.0*kinetic_energy)|0);
 			health_display.innerHTML = me.health;
 			if(me.health<=0) {
+				map.defeat = true;
 				display('We are defeated!<br>Pull back!', 5000);
 				return;
 			}
@@ -230,8 +243,10 @@ function draw() {
 					if( map.wagons[j].burned )
 						burned_count+=1;
 				}
-				if(burned_count==map.wagons.length)
+				if(burned_count==map.wagons.length) {
+					map.victory = true;
 					display('Victory!', 10000, 'blue');
+				}
 			}
 		}
 	}
