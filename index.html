@@ -432,39 +432,50 @@ function draw() {
 
 	g.restore();
 	
-	g.fillStyle = '#F00';
-	g.beginPath();
-	g.arc(canvas.width/2/scale, canvas.height/scale-me.z*80*scale/2-40, me.fire_size, -pi/2-pi/5, -pi/2+pi/5);
-	g.lineTo(canvas.width/2/scale, canvas.height/scale-me.z*80*scale/2-40);
-	g.fill();
-	g.fillStyle = '#a0a';
-	me.sprite_cycle_index += dt*me.sprite_cycle_speed;
+	me.sprite_cycle_index += dt*me.sprite_cycle_speed*me.v/me.max_v;
 	if(me.sprite_cycle_index>me.sprite_cycle_length) { me.sprite_cycle_index=0; }
 	var index = me.sprite_cycle_index|0;
 	
 	var q = Math.sin(2*pi*me.sprite_cycle_index/me.sprite_cycle_length);
 	var s = 1+0.3*q;
+	q *= 0.1;
 	g.save();
 	g.translate(canvas.width/2/scale, canvas.height/scale-80);
+	
+	g.beginPath();
+	g.moveTo(0,-10);
+	g.quadraticCurveTo(0,-me.fire_size*0.5, me.fire_size,-me.fire_size);
+	g.lineTo(-me.fire_size,-me.fire_size);
+	g.quadraticCurveTo(0,-me.fire_size*0.5, 0,-10);
+	g.fillStyle = '#F00';
+	g.fill();
+	g.beginPath();
+	g.moveTo(0,-10);
+	g.quadraticCurveTo(0,-me.fire_size*0.5, me.fire_size*0.5,-me.fire_size);
+	g.lineTo(-me.fire_size*0.5,-me.fire_size);
+	g.quadraticCurveTo(0,-me.fire_size*0.5, 0,-10);
+	g.fillStyle = '#FF0';
+	g.fill();
+	
 	g.beginPath();
 	g.moveTo(0,0);
-	g.lineTo(48*s,0);
-	g.lineTo(36*s,20);
-	g.lineTo(24*s,5);
-	g.lineTo(12*s,20);
-	g.lineTo(0,0);
-	g.lineTo(-48*s,0);
-	g.lineTo(-36*s,20);
-	g.lineTo(-24*s,5);
-	g.lineTo(-12*s,20);
-	g.lineTo(0,0);
+	g.lineTo(48*s,0-q*48);
+	g.quadraticCurveTo(36*s,15-q*36, 36*s,25-q*36);
+	g.quadraticCurveTo(36*s,15-q*24, 24*s,5-q*24);
+	g.quadraticCurveTo(12*s,15-q*12, 12*s,25-q*12);
+	g.quadraticCurveTo(12*s,15, 0,0);
+	g.lineTo(-48*s,0-q*48);
+	g.quadraticCurveTo(-36*s,15-q*36, -36*s,25-q*36);
+	g.quadraticCurveTo(-36*s,15-q*24, -24*s,5-q*24);
+	g.quadraticCurveTo(-12*s,15-q*12, -12*s,25-q*12);
+	g.quadraticCurveTo(-12*s,15, 0,0);
 	g.bezierCurveTo(10, 20, -10, 30, 0, 50);
 	g.bezierCurveTo(-20, 30, 20, 20, 0, 0);
 	g.lineTo(5,-1);
 	g.lineTo(0,-10);
 	g.lineTo(-5,-1);
 	//g.fillStyle = '#000';
-	var grd=g.createRadialGradient(0,20,40*s,0,20,50*s);
+	var grd=g.createRadialGradient(0,20, 40*s, 0,20, 50*s);
 	grd.addColorStop(0,'#000');
 	grd.addColorStop(1,'#FF0');
 	g.fillStyle=grd;
