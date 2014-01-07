@@ -153,8 +153,8 @@ LEFT = 37; RIGHT = 39;
 UP = 38; DOWN = 40;
 SPACE = 32;
 
+orientation_set = false;
 if (window.DeviceOrientationEvent) {
-	orientation_set = false;
 	var accel = document.getElementById('accel');
   window.addEventListener('deviceorientation', function(event) {
 		if(!orientation_set) {
@@ -167,7 +167,7 @@ if (window.DeviceOrientationEvent) {
   	forward_back_tilt = event.beta - default_forward_back_tilt;
   	compass_direction = event.alpha - default_compass_direction;
     
-    accel.innerHTML = left_right_tilt+'<br>'+forward_back_tilt+'<br>'+direction;
+    accel.innerHTML = left_right_tilt+'<br>'+forward_back_tilt+'<br>'+compass_direction;
   }, false);
 }
 
@@ -205,11 +205,11 @@ function draw() {
 		var sensitivity = 10; //degrees
 
 		if(left_right_tilt<-sensitivity && me.da>-me.max_da) { me.da -= me.dda; }
-		else if(left_right_tilt>sensitivity me.da<me.max_da) { me.da += me.dda; }
+		else if(left_right_tilt>sensitivity && me.da<me.max_da) { me.da += me.dda; }
 		else if(left_right_tilt>-sensitivity && left_right_tilt<sensitivity) { me.da = 0.0; }
 
 		if(forward_back_tilt<-sensitivity && me.dv>-me.max_dv) { me.dv -= me.ddv*2; }
-		else if(kforward_back_tilt>sensitivity && me.dv<me.max_dv) { me.dv += me.ddv; }
+		else if(forward_back_tilt>sensitivity && me.dv<me.max_dv) { me.dv += me.ddv; }
 		else if(forward_back_tilt>-sensitivity && forward_back_tilt<sensitivity) { me.dv = 0.0; }
 	}
 	
