@@ -169,7 +169,7 @@ orientation_set = false;
 if (window.DeviceOrientationEvent) {
   window.ondeviceorientation = function(event) {
 		if(!orientation_set) {
-			if(event.gamma===null && event.beta===null && event.alpha===null) return; // reject false devices
+			if(event.gamma===null && event.beta===null && event.alpha===null) { window.ondeviceorientation=null; return; } // reject false devices
 			default_left_right_tilt = event.gamma; // left-to-right tilt in degrees, where right is positive
 			default_forward_back_tilt = event.beta; // front-to-back tilt in degrees, where front is positive
 			default_compass_direction = event.alpha; // compass direction the device is facing in degrees
@@ -212,16 +212,18 @@ function draw() {
 	}
 	
 	if(orientation_set) { //accelerometer controls
-		var sensitivity = 3; //degrees
+		var dead_band = 2; //degrees
 		var range = 30;
+		var left_right_sensitivity = 15;
+		var forward_back_sensitivity = 5;
 
-		if(left_right_tilt<-sensitivity && me.da>-me.max_da) { me.da = -10*me.dda*Math.min(1, Math.abs(left_right_tilt-sensitivity)/range); }
-		else if(left_right_tilt>sensitivity && me.da<me.max_da) { me.da = 10*me.dda*Math.min(1, Math.abs(left_right_tilt-sensitivity)/range); }
-		else if(left_right_tilt>-sensitivity && left_right_tilt<sensitivity) { me.da = 0.0; }
+		if(left_right_tilt<-dead_band && me.da>-me.max_da) { me.da = -left_right_sensitivity*me.dda*Math.min(1, Math.abs(left_right_tilt-dead_band)/range); }
+		else if(left_right_tilt>dead_band && me.da<me.max_da) { me.da = left_right_sensitivity*me.dda*Math.min(1, Math.abs(left_right_tilt-dead_band)/range); }
+		else if(left_right_tilt>-dead_band && left_right_tilt<dead_band) { me.da = 0.0; }
 
-		if(forward_back_tilt>sensitivity && me.dv>-me.max_dv) { me.dv = -10*me.ddv*2*Math.min(1, Math.abs(forward_back_tilt-sensitivity)/range); }
-		else if(forward_back_tilt<-sensitivity && me.dv<me.max_dv) { me.dv = 10*me.ddv*Math.min(1, Math.abs(forward_back_tilt-sensitivity)/range); }
-		else if(forward_back_tilt>-sensitivity && forward_back_tilt<sensitivity) { me.dv = 0.0; }
+		if(forward_back_tilt>dead_band && me.dv>-me.max_dv) { me.dv = -forward_back_sensitivity*me.ddv*2*Math.min(1, Math.abs(forward_back_tilt-dead_band)/range); }
+		else if(forward_back_tilt<-dead_band && me.dv<me.max_dv) { me.dv = forward_back_sensitivity*me.ddv*Math.min(1, Math.abs(forward_back_tilt-dead_band)/range); }
+		else if(forward_back_tilt>-dead_band && forward_back_tilt<dead_band) { me.dv = 0.0; }
 		
 		if(touchscreen_touched) {
 			me.fire_size += me.fire_speed;
