@@ -10,8 +10,6 @@
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
 	<div style='position:absolute; top:1em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
 <script>
-pi = Math.PI;
-
 CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
   if (w < 2 * r) { r = w / 2; }
   if (h < 2 * r) { r = h / 2; }
@@ -27,28 +25,17 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
 
 var display_box = document.getElementById('display');
 function display(s, t, color) {
-	if(!t) { t=2000; }
+	if(t===undefined) { t=2000; }
 	if(!color) { color='red'; }
 	display_box.style.color = color;
 	display_box.innerHTML = s;
 	display_box.style.display = 'block';
-	setTimeout("display_box.style.display='none';", t);
+	if(t) { setTimeout("display_box.style.display='none';", t); }
 }
-
-SINGLE_GAME = 0; CAMPAIGN = 1;
-PLAYING = 0; VICTORY = 1; DEFEAT = 2;
-var Game = (function() {
-	function Game() {
-		this.mode = SINGLE_GAME;
-		this.state = PLAYING;
-		this.levels = [];
-	}
-	return Game;
-})();
 
 var Player = (function() {
 	function Player() {
-		this.a = pi/2;
+		this.a = Math.PI/2;
 		this.da = 0.0;
 		this.max_da = 0.002;
 		this.dda = 0.0002;
@@ -104,6 +91,7 @@ var Map = (function() {
 	function Map() {
 		this.win_condition = null;
 		this.loss_condition = null;
+		this.objective_string = 'Objective: burn all supply wagons';
 		this.width = 2000;
 		this.height = 2000;
 		this.victory = false;
@@ -123,25 +111,25 @@ var Map = (function() {
 			for(var y=0; y<this.height; y+=550) {
 				var xx = x+Math.random()*50;
 				var yy = y+Math.random()*50;
-				var w = new MapObject(WAGON,xx,yy,Math.random()*2*pi);
+				var w = new MapObject(WAGON,xx,yy,Math.random()*2*Math.PI);
 				this.objects.push( w );
 				this.wagon_count += 1;
 				
-				for(var theta=0; theta<2*pi; theta+=2*pi/10) {
+				for(var theta=0; theta<2*Math.PI; theta+=2*Math.PI/10) {
 					var xxx = xx+Math.cos(theta)*100;
 					var yyy = yy+Math.sin(theta)*100;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-pi/2,w) );
+					this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
 					
 					xxx = xx+Math.cos(theta)*50;
 					yyy = yy+Math.sin(theta)*50;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-pi/2,w) );
+					this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-Math.PI/2,w) );
 					
 					xxx = xx+Math.cos(theta)*150;
 					yyy = yy+Math.sin(theta)*150;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-pi/2,w) );
+					this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-Math.PI/2,w) );
 				}
 			}
 		}
@@ -149,8 +137,20 @@ var Map = (function() {
 	return Map;
 })();
 
-var me = new Player();
-var map = new Map();
+var Game = (function() {
+	function Game() {
+		this.SINGLE_GAME = 0; this.CAMPAIGN = 1;
+		this.mode = this.SINGLE_GAME;
+		this.maps = [];
+		this.current_map = new Map();
+		this.player = new Player();
+	}
+	return Game;
+})();
+
+var game = new Game();
+var map = game.current_map;
+var me = game.player;
 
 keys = [];
 for(var i=0; i<256; i++) {
@@ -208,23 +208,9 @@ var g=canvas.getContext("2d");
 canvas.style.backgroundColor = "#0A1";
 
 info = document.getElementById('info');
-display('Objective: burn all supply wagons', 3000);
+display(map.objective_string, 3000);
 
-previous_time = +new Date();
-function draw() {
-	requestAnimationFrame(draw);
-	current_time = +new Date();
-	dt = current_time - previous_time;
-	previous_time = current_time;
-	if(dt>500) { return; } //pause while offscreen
-	
-	if(map.defeat) { //defeat
-		return;
-	}
-	if(map.victory) { //victory
-		return;
-	}
-	
+function controls(dt) {
 	if(orientation_set) { //accelerometer controls
 		var dead_band = 2; //degrees
 		var range = 30;
@@ -262,7 +248,9 @@ function draw() {
 		}
 		else { me.fire_size = 0.0; }
 	}
-	
+}
+
+function game_logic(dt) {
 	me.a += dt*me.da;
 	if(me.da!==0.0) {
 		me.sin_neg_a = Math.sin(-me.a);
@@ -297,14 +285,14 @@ function draw() {
 			else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
 				var kinetic_energy = (p.dx-me.dx)*(p.dx-me.dx) + (p.dy-me.dy)*(p.dy-me.dy);
 				var damage = 5*((30.0*kinetic_energy)|0);
-				if(p.type==BULLET) { damage = ((5.0*kinetic_energy)|0); }
+				if(p.type==BULLET) { damage = Math.min(0.5, (20.0*kinetic_energy)|0); }
 				if(damage===0) { continue; }
 				p.x = -1000.0; p.y = -1000.0;
 				me.health -= damage;
 				if(me.health<=0) {
 					map.defeat = true;
-					display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', 5000);
-					document.onmousedown = function() { location.reload(); document.onmousedown=null; };
+					display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', false);
+					document.onclick = function() { document.onclick=null; me = new Player(); map = new Map(); };
 				}
 			}
 		}
@@ -321,8 +309,10 @@ function draw() {
 				o.dy += c.y<c.guarding.y ? 0.01 : -0.01;
 			}
 			
-			o.x += dt*o.dx;
-			o.y += dt*o.dy;
+			if( (o.x+dt*o.dx-me.x)*(o.x+dt*o.dx-me.x) + (o.y+dt*o.dy-me.y)*(o.y+dt*o.dy-me.y) > 100*100 ) {
+				o.x += dt*o.dx;
+				o.y += dt*o.dy;
+			}
 			if(o.x<0.0) { o.x = 0.0; }
 			if(o.y<0.0) { o.y = 0.0; }
 			if(o.x>map.width-0) { o.x = map.width-0; }
@@ -333,12 +323,12 @@ function draw() {
 		
 			var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
 			var dif = c.a-aim_angle;
-			if(Math.abs(dif)>Math.abs(c.a-aim_angle+2*pi)) { dif = c.a-aim_angle+2*pi; }
-			if(Math.abs(dif)>Math.abs(c.a-aim_angle-2*pi)) { dif = c.a-aim_angle-2*pi; }
+			if(Math.abs(dif)>Math.abs(c.a-aim_angle+2*Math.PI)) { dif = c.a-aim_angle+2*Math.PI; }
+			if(Math.abs(dif)>Math.abs(c.a-aim_angle-2*Math.PI)) { dif = c.a-aim_angle-2*Math.PI; }
 	
 			c.a += (dif<0.0 ? c.da : -c.da)*dt;
-			if(c.a<-pi) { c.a+=2*pi; }
-			else if(c.a>pi) { c.a-=2*pi; }
+			if(c.a<-Math.PI) { c.a+=2*Math.PI; }
+			else if(c.a>Math.PI) { c.a-=2*Math.PI; }
 		
 			if(c.cooldown>0.0) { c.cooldown -= dt; }
 			else { c.cooldown = 0.0; }
@@ -380,12 +370,33 @@ function draw() {
 				map.wagons_burned_count+=1;
 				if(map.wagons_burned_count==map.wagon_count) {
 					map.victory = true;
-					display('Victory!<br><small>Click to continue</small>', 10000, 'blue');
-					document.onmousedown = function() { location.reload(); document.onmousedown=null; };
+					display('Victory!<br><small>Click to continue</small>', false, 'blue');
+					document.onclick = function() { document.onclick=null; me = new Player(); map = new Map(); };
 				}
 			}
 		}
 	}
+	return nearest_goal;
+}
+
+previous_time = +new Date();
+function draw() {
+	requestAnimationFrame(draw);
+	current_time = +new Date();
+	var dt = current_time - previous_time;
+	previous_time = current_time;
+	if(dt>500) { return; } //do not count offscreen time
+	
+	if(map.defeat) {
+		return;
+	}
+	if(map.victory) {
+		return;
+	}
+	
+	controls(dt);
+	
+	var nearest_goal = game_logic(dt);
 	
 	info.innerHTML = Math.round(1000/dt)+'fps';
 	//canvas.width = canvas.width;
@@ -472,7 +483,7 @@ function draw() {
 			g.fillStyle=n.burned ? '#000' : '#F00';
 			g.fillRect(-6,-3,12,6);
 			g.beginPath();
-			g.arc(0, 0, 4, 0, 2*pi);
+			g.arc(0, 0, 4, 0, 2*Math.PI);
 			g.fillStyle=n.burned ? '#000' : '#FF5';
 			g.fill();
 		}
@@ -486,11 +497,11 @@ function draw() {
 			g.roundRect(-3, -28, 6, 12, 3).fill();
 
 			g.beginPath();
-			g.arc(0, 13, 10, 0.3*pi, 0.7*pi);
+			g.arc(0, 13, 10, 0.3*Math.PI, 0.7*Math.PI);
 			g.lineTo(0, 13);
 			
 			g.moveTo(0, -27);
-			g.arc(0, -27, 12, 0.35*pi, 0.65*pi);
+			g.arc(0, -27, 12, 0.35*Math.PI, 0.65*Math.PI);
 			g.lineTo(0, -27);
 			g.fillStyle=c.burned ? '#000' : '#321';
 			g.fill();
@@ -503,7 +514,7 @@ function draw() {
 			g.fillStyle=c.burned ? '#000' : '#F00';
 			g.fillRect(-6,-3,12,6);
 			g.beginPath();
-			g.arc(0, 0, 4, 0, 2*pi);
+			g.arc(0, 0, 4, 0, 2*Math.PI);
 			g.fillStyle=c.burned ? '#000' : '#FF5';
 			g.fill();
 		}
@@ -511,11 +522,11 @@ function draw() {
 			var p = o;
 			g.beginPath();
 			if(p.type==CANNONBALL) {
-				g.arc(p.x, p.y, 5, 0, 2*pi);
+				g.arc(p.x, p.y, 5, 0, 2*Math.PI);
 				g.fillStyle='#222';
 			}
 			else if(p.type==BULLET) {
-				g.arc(p.x, p.y, 2, 0, 2*pi);
+				g.arc(p.x, p.y, 2, 0, 2*Math.PI);
 				g.fillStyle='#222';
 			}
 			g.fill();
@@ -545,7 +556,7 @@ function draw() {
 	if(me.sprite_cycle_index>me.sprite_cycle_length) { me.sprite_cycle_index=0; }
 	var index = me.sprite_cycle_index|0;
 	
-	var q = Math.sin(2*pi*me.sprite_cycle_index/me.sprite_cycle_length);
+	var q = Math.sin(2*Math.PI*me.sprite_cycle_index/me.sprite_cycle_length);
 	var s = 1+0.3*q;
 	q *= 0.1;
 	g.save();
