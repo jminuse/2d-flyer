@@ -78,7 +78,7 @@ var MapObject = (function() {
 		this.v = 0.0;
 		this.dx = 0.0;
 		this.dy = 0.0;
-		if(type==CAVALRY) { this.v = 0.1; this.da = 0.002; }
+		if(type==CAVALRY) { this.v = 0.06; this.da = 0.002; }
 		else if(type==INFANTRY) { this.v = 0.02; this.da = 0.002; }
 		else if(type==CANNON) { this.da = 0.0002; }
 	}
@@ -282,7 +282,7 @@ function draw() {
 					valid_projectile.dy = -0.4*cos_a;
 					valid_projectile.type=BULLET;
 				}
-				c.cooldown = 3000;
+				c.cooldown = 5000.0;
 			}
 		}
 		else if(o.type==WAGON) {
