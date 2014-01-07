@@ -238,7 +238,7 @@ function draw() {
 		}
 		else if(o.type==CANNON || o.type==INFANTRY || o.type==CAVALRY) {
 			var c = o;
-			if( (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance) { continue; }
+			if( c.burned || (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > look_distance*look_distance) { continue; }
 			
 			c.dx = -c.v*Math.sin(c.a);
 			c.dy = -c.v*Math.cos(c.a);
@@ -265,7 +265,7 @@ function draw() {
 			else { c.cooldown = 0.0; }
 		
 			if( (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < me.fire_size*me.fire_size*0.7*0.7 ) {
-				c.x = -1000.0; c.y = -1000.0;
+				c.burned = true;
 			}
 			else if(valid_projectile && c.cooldown<=0 && (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < 200*200) {
 				var sin_a = Math.sin(c.a);
@@ -292,7 +292,7 @@ function draw() {
 				nearest_goal = w;
 				nearest_goal_distance = dist_squared;
 			}
-			if( dist_squared > look_distance*look_distance) { continue; }
+			if( w.burned || dist_squared > look_distance*look_distance) { continue; }
 			var x = me.x - me.sin_neg_a*60;
 			var y = me.y - me.cos_neg_a*60;
 			
@@ -311,7 +311,9 @@ function draw() {
 	}
 	
 	info.innerHTML = Math.round(1000/dt)+'fps';
-	canvas.width = canvas.width;
+	//canvas.width = canvas.width;
+	g.clearRect(0, 0, canvas.width, canvas.height);
+	g.save();
 	g.scale(scale, scale);
 	g.save();
 	g.translate(canvas.width/2/scale, canvas.height/scale-50);
@@ -354,11 +356,11 @@ function draw() {
 			var wheel_width = 5;
 			var wheel_length = 30;
 			var cannon_length = 40;
-			g.fillStyle='#961';
+			g.fillStyle = c.burned ? '#000' : '#961';
 			g.fillRect(cannon_width/2+3, -wheel_length/2, wheel_width, wheel_length);
 			g.fillRect(-cannon_width/2-wheel_width-3, -wheel_length/2, wheel_width, wheel_length);
 			g.fillRect(-cannon_width/2-3, -5, cannon_width+2*3, 10);
-			g.fillStyle='#444';
+			g.fillStyle = c.burned ? '#000' : '#444';
 			g.fillRect(-cannon_width/2, -12-wheel_length/2, cannon_width, cannon_length);
 		}
 		else if(o.type==WAGON) {
@@ -379,43 +381,43 @@ function draw() {
 			g.translate(n.x, n.y);
 			g.rotate(-n.a);
 			if(n.cooldown===0.0) { //draw musket
-				g.fillStyle='#777';
+				g.fillStyle=n.burned ? '#000' : '#777';
 				g.fillRect(1,-24,2,24);
-				g.fillStyle='brown';
+				g.fillStyle=n.burned ? '#000' : 'brown';
 				g.fillRect(1,-18,2,18);
 			}
 			else { //reload
-				g.fillStyle='#777';
+				g.fillStyle=n.burned ? '#000' : '#777';
 				g.fillRect(1,-12,2,12);
-				g.fillStyle='brown';
+				g.fillStyle=n.burned ? '#000' : 'brown';
 				g.fillRect(1,-9,2,9);
 			}
-			g.fillStyle='#F00';
+			g.fillStyle=n.burned ? '#000' : '#F00';
 			g.fillRect(-6,-3,12,6);
 			g.beginPath();
 			g.arc(0, 0, 4, 0, 2*pi);
-			g.fillStyle='#FF5';
+			g.fillStyle=n.burned ? '#000' : '#FF5';
 			g.fill();
 		}
 		else if(o.type==CAVALRY) {
 			var c = o;
 			g.translate(c.x, c.y);
 			g.rotate(-c.a);
-			g.fillStyle='#631';
+			g.fillStyle=c.burned ? '#000' : '#631';
 			//g.fillRect(-6, -18, 6*2, 18*2);
 			g.roundRect(-6, -18, 6*2, 18*2, 4).fill();
 			g.roundRect(-3, -28, 6, 12, 3).fill();
 
-			g.fillStyle='#777';
+			g.fillStyle=c.burned ? '#000' : '#777';
 			g.fillRect(1,-24,2,24);
-			g.fillStyle='brown';
+			g.fillStyle=c.burned ? '#000' : 'brown';
 			g.fillRect(1,-18,2,18);
 			
-			g.fillStyle='#F00';
+			g.fillStyle=c.burned ? '#000' : '#F00';
 			g.fillRect(-6,-3,12,6);
 			g.beginPath();
 			g.arc(0, 0, 4, 0, 2*pi);
-			g.fillStyle='#FF5';
+			g.fillStyle=c.burned ? '#000' : '#FF5';
 			g.fill();
 		}
 		else if(o.type==CANNONBALL || o.type==BULLET) {
@@ -434,14 +436,16 @@ function draw() {
 		g.restore();
 	}
 
-	var xx = nearest_goal.x-me.x;
-	var yy = nearest_goal.y-me.y;
-	var L = Math.sqrt(xx*xx + yy*yy);
-	g.beginPath();
-	g.moveTo(me.x + 15*xx/L, me.y + 15*yy/L);
-	g.lineTo(me.x + 50*xx/L, me.y + 50*yy/L);
-	g.strokeStyle = '#00A';
-	g.stroke();
+	if(nearest_goal) {
+		var xx = nearest_goal.x-me.x;
+		var yy = nearest_goal.y-me.y;
+		var L = Math.sqrt(xx*xx + yy*yy);
+		g.beginPath();
+		g.moveTo(me.x + 15*xx/L, me.y + 15*yy/L);
+		g.lineTo(me.x + 50*xx/L, me.y + 50*yy/L);
+		g.strokeStyle = '#00A';
+		g.stroke();
+	}
 	
 	g.restore();
 	
@@ -498,6 +502,7 @@ function draw() {
 	//health bar
 	g.fillStyle = '#F00';
 	g.fillRect(5, 5, (canvas.width/scale-5*2)*Math.max(me.health/me.max_health, 0), 5);
+	g.restore();
 }
 draw();
 
