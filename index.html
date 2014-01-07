@@ -68,19 +68,20 @@ CANNON = 3; WAGON = 4; INFANTRY = 5;
 CAVALRY = 6; PROJECTILES = 7;
 
 var MapObject = (function() {
-	function MapObject(type,x,y,a,burned,cooldown) {
+	function MapObject(type,x,y,a,guarding,burned,cooldown) {
 		this.type = type;
 		this.x = x || -1000.0;
 		this.y = y || -1000.0;
 		this.a = a || 0.0;
+		this.guarding = guarding || null;
 		this.burned = burned || false;
 		this.cooldown = cooldown || 0.0;
 		this.v = 0.0;
 		this.dx = 0.0;
 		this.dy = 0.0;
-		if(type==CAVALRY) { this.v = 0.06; this.da = 0.002; }
-		else if(type==INFANTRY) { this.v = 0.02; this.da = 0.002; }
-		else if(type==CANNON) { this.da = 0.0002; }
+		if(type==CAVALRY) { this.v = 0.06; this.da = 0.002; this.guarding_distance=200; }
+		else if(type==INFANTRY) { this.v = 0.02; this.da = 0.002; this.guarding_distance=100; }
+		else if(type==CANNON) { this.da = 0.0002; this.guarding_distance=100; }
 	}
 	return MapObject;
 })();
@@ -105,24 +106,25 @@ var Map = (function() {
 			for(var y=0; y<this.height; y+=550) {
 				var xx = x+Math.random()*50;
 				var yy = y+Math.random()*50;
-				this.objects.push( new MapObject(WAGON,xx,yy,Math.random()*2*pi) );
+				var w = new MapObject(WAGON,xx,yy,Math.random()*2*pi);
+				this.objects.push( w );
 				this.wagon_count += 1;
 				
 				for(var theta=0; theta<2*pi; theta+=2*pi/10) {
 					var xxx = xx+Math.cos(theta)*100;
 					var yyy = yy+Math.sin(theta)*100;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-pi/2) );
+					this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-pi/2,w) );
 					
 					xxx = xx+Math.cos(theta)*50;
 					yyy = yy+Math.sin(theta)*50;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-pi/2) );
+					this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-pi/2,w) );
 					
 					xxx = xx+Math.cos(theta)*150;
 					yyy = yy+Math.sin(theta)*150;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-pi/2) );
+					this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-pi/2,w) );
 				}
 			}
 		}
@@ -242,6 +244,13 @@ function draw() {
 			
 			c.dx = -c.v*Math.sin(c.a);
 			c.dy = -c.v*Math.cos(c.a);
+			
+			var guarding_distance_squared = (c.x-c.guarding.x)*(c.x-c.guarding.x) + (c.y-c.guarding.y)*(c.y-c.guarding.y);
+			if( guarding_distance_squared > c.guarding_distance*c.guarding_distance ) {
+				o.dx += c.x<c.guarding.x ? 0.01 : -0.01;
+				o.dy += c.y<c.guarding.y ? 0.01 : -0.01;
+			}
+			
 			o.x += dt*o.dx;
 			o.y += dt*o.dy;
 			if(o.x<0.0) { o.x = 0.0; }
