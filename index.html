@@ -158,6 +158,7 @@ if (window.DeviceOrientationEvent) {
 	var accel = document.getElementById('accel');
   window.addEventListener('deviceorientation', function(event) {
 		if(!orientation_set) {
+			if(event.gamma===null && event.beta===null && event.alpha===null) return; // reject false devices
 			default_left_right_tilt = event.gamma; // left-to-right tilt in degrees, where right is positive
 			default_forward_back_tilt = event.beta; // front-to-back tilt in degrees, where front is positive
 			default_compass_direction = event.alpha; // compass direction the device is facing in degrees
@@ -212,21 +213,22 @@ function draw() {
 		else if(forward_back_tilt>sensitivity && me.dv<me.max_dv) { me.dv += me.ddv; }
 		else if(forward_back_tilt>-sensitivity && forward_back_tilt<sensitivity) { me.dv = 0.0; }
 	}
+	else { //keyboard controls
+		if(keys[LEFT] && me.da>-me.max_da) { me.da -= me.dda; }
+		else if(keys[RIGHT] && me.da<me.max_da) { me.da += me.dda; }
+		else if(!keys[LEFT] && !keys[RIGHT]) { me.da = 0.0; }
 	
-	if(keys[LEFT] && me.da>-me.max_da) { me.da -= me.dda; }
-	else if(keys[RIGHT] && me.da<me.max_da) { me.da += me.dda; }
-	else if(!keys[LEFT] && !keys[RIGHT]) { me.da = 0.0; }
+		if(keys[DOWN] && me.dv>-me.max_dv) { me.dv -= me.ddv*2; }
+		else if(keys[UP] && me.dv<me.max_dv) { me.dv += me.ddv; }
+		else if(!keys[DOWN] && !keys[UP]) { me.dv = 0.0; }
 	
-	if(keys[DOWN] && me.dv>-me.max_dv) { me.dv -= me.ddv*2; }
-	else if(keys[UP] && me.dv<me.max_dv) { me.dv += me.ddv; }
-	else if(!keys[DOWN] && !keys[UP]) { me.dv = 0.0; }
-	
-	if(keys[SPACE]) {
-		me.fire_size += me.fire_speed;
-		if(me.fire_size==me.max_fire_size) { me.fire_size=0.0; }
-		if(me.fire_size>me.max_fire_size) { me.fire_size=me.max_fire_size; }
+		if(keys[SPACE]) {
+			me.fire_size += me.fire_speed;
+			if(me.fire_size==me.max_fire_size) { me.fire_size=0.0; }
+			if(me.fire_size>me.max_fire_size) { me.fire_size=me.max_fire_size; }
+		}
+		else { me.fire_size = 0.0; }
 	}
-	else { me.fire_size = 0.0; }
 	
 	me.a += dt*me.da;
 	if(me.da!==0.0) {
