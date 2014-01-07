@@ -160,6 +160,9 @@ document.ontouchstart = function(e) {
 document.ontouchend = function(e) {
 	touchscreen_touched=false;
 };
+document.ontouchmove = function(e) {
+	e.preventDefault(); //stop rubber band effect
+};
 
 orientation_set = false;
 if (window.DeviceOrientationEvent) {
