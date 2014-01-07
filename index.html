@@ -154,24 +154,31 @@ UP = 38; DOWN = 40;
 SPACE = 32;
 
 if (window.DeviceOrientationEvent) {
-	var default_acceleration = null;
+	var oriented = false;
+	var default_left_right_tilt = 0.0;
+	var default_forward_back_tilt = 0.0;
+	var default_direction = 0.0;
 	var accel = document.getElementById('accel');
   window.addEventListener('deviceorientation', function(event) {
-    /*// gamma is the left-to-right tilt in degrees, where right is positive
-    var tiltLR = event.gamma;
+    // gamma is the left-to-right tilt in degrees, where right is positive
+    var left_right_tilt = event.gamma;
     // beta is the front-to-back tilt in degrees, where front is positive
-    var tiltFB = event.beta;
+    var forward_back_tilt = event.beta;
     // alpha is the compass direction the device is facing in degrees
-    var dir = event.alpha;*/
+    var direction = event.alpha;
 		
-		var a = event.accelerationIncludingGravity;
-		if(default_acceleration===null) { default_acceleration = a; alert(a); return; }
+		if(!oriented) {
+			default_left_right_tilt = left_right_tilt;
+			default_forward_back_tilt = forward_back_tilt;
+			default_direction = direction;
+			return;
+		}
     
-  	var ax = a[0]-default_acceleration[0];
-    var ay = a[1]-default_acceleration[1];
-    var az = a[2]-default_acceleration[2];
+  	left_right_tilt -= default_left_right_tilt;
+  	forward_back_tilt -= default_forward_back_tilt;
+  	direction -= default_direction;
     
-    accel.innerHTML = ax+'<br>'+ay+'<br>'+az;
+    accel.innerHTML = left_right_tilt+'<br>'+forward_back_tilt+'<br>'+direction;
     
   }, false);
 }
