@@ -167,7 +167,7 @@ if('ontouchstart' in document) {
 
 orientation_set = false;
 if (window.DeviceOrientationEvent) {
-  window.addEventListener('deviceorientation', function(event) {
+  window.ondeviceorientation = function(event) {
 		if(!orientation_set) {
 			if(event.gamma===null && event.beta===null && event.alpha===null) return; // reject false devices
 			default_left_right_tilt = event.gamma; // left-to-right tilt in degrees, where right is positive
@@ -178,7 +178,7 @@ if (window.DeviceOrientationEvent) {
   	left_right_tilt = event.gamma - default_left_right_tilt;
   	forward_back_tilt = event.beta - default_forward_back_tilt;
   	compass_direction = event.alpha - default_compass_direction;
-  }, false);
+  };
 }
 
 var canvas=document.getElementById("myCanvas");
@@ -213,7 +213,7 @@ function draw() {
 	
 	if(orientation_set) { //accelerometer controls
 		var sensitivity = 3; //degrees
-		var range = 10;
+		var range = 30;
 
 		if(left_right_tilt<-sensitivity && me.da>-me.max_da) { me.da -= me.dda*Math.min(1, Math.abs(left_right_tilt-sensitivity)/range); }
 		else if(left_right_tilt>sensitivity && me.da<me.max_da) { me.da += me.dda*Math.min(1, Math.abs(left_right_tilt-sensitivity)/range); }
