@@ -154,33 +154,20 @@ UP = 38; DOWN = 40;
 SPACE = 32;
 
 if (window.DeviceOrientationEvent) {
-	var oriented = false;
-	var default_left_right_tilt = 0.0;
-	var default_forward_back_tilt = 0.0;
-	var default_direction = 0.0;
+	orientation_set = false;
 	var accel = document.getElementById('accel');
   window.addEventListener('deviceorientation', function(event) {
-    // gamma is the left-to-right tilt in degrees, where right is positive
-    var left_right_tilt = event.gamma;
-    // beta is the front-to-back tilt in degrees, where front is positive
-    var forward_back_tilt = event.beta;
-    // alpha is the compass direction the device is facing in degrees
-    var direction = event.alpha;
-		
-		if(!oriented) {
-			default_left_right_tilt = left_right_tilt;
-			default_forward_back_tilt = forward_back_tilt;
-			default_direction = direction;
-			oriented = true;
-			return;
+		if(!orientation_set) {
+			default_left_right_tilt = event.gamma; // left-to-right tilt in degrees, where right is positive
+			default_forward_back_tilt = event.beta; // front-to-back tilt in degrees, where front is positive
+			default_compass_direction = event.alpha; // compass direction the device is facing in degrees
+			orientation_set = true;
 		}
-    
-  	left_right_tilt -= default_left_right_tilt;
-  	forward_back_tilt -= default_forward_back_tilt;
-  	direction -= default_direction;
+  	left_right_tilt = event.gamma - default_left_right_tilt;
+  	forward_back_tilt = event.beta - default_forward_back_tilt;
+  	compass_direction = event.alpha - default_compass_direction;
     
     accel.innerHTML = left_right_tilt+'<br>'+forward_back_tilt+'<br>'+direction;
-    
   }, false);
 }
 
@@ -212,6 +199,18 @@ function draw() {
 	}
 	if(map.victory) { //victory
 		return;
+	}
+	
+	if(orientation_set) { //accelerometer controls
+		var sensitivity = 10; //degrees
+
+		if(left_right_tilt<-sensitivity && me.da>-me.max_da) { me.da -= me.dda; }
+		else if(left_right_tilt>sensitivity me.da<me.max_da) { me.da += me.dda; }
+		else if(left_right_tilt>-sensitivity && left_right_tilt<sensitivity) { me.da = 0.0; }
+
+		if(forward_back_tilt<-sensitivity && me.dv>-me.max_dv) { me.dv -= me.ddv*2; }
+		else if(kforward_back_tilt>sensitivity && me.dv<me.max_dv) { me.dv += me.ddv; }
+		else if(forward_back_tilt>-sensitivity && forward_back_tilt<sensitivity) { me.dv = 0.0; }
 	}
 	
 	if(keys[LEFT] && me.da>-me.max_da) { me.da -= me.dda; }
