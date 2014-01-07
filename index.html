@@ -54,7 +54,9 @@ var Player = (function() {
 		this.ddv = 0.0002;
 		this.fire_size = 0.0;
 		this.max_fire_size = 100.0;
-		this.fire_speed = 5.0;
+		this.fire_speed = 0.1;
+		this.fire_time_max = 1000.0;
+		this.fire_time = 0.0;
 		this.max_health = 100;
 		this.health = this.max_health;
 		this.sprite_cycle_length = 10.0;
@@ -229,11 +231,14 @@ function controls(dt) {
 		else if(forward_back_tilt>-dead_band && forward_back_tilt<dead_band) { me.dv = 0.0; }
 		
 		if(!touchscreen_touched) {
-			me.fire_size += me.fire_speed;
-			if(me.fire_size==me.max_fire_size) { me.fire_size=0.0; }
-			if(me.fire_size>me.max_fire_size) { me.fire_size=me.max_fire_size; }
+			me.fire_size += me.fire_speed*dt;
+			if(me.fire_size>=me.max_fire_size) {
+				me.fire_size=me.max_fire_size;
+				me.fire_time += dt;
+				if(me.fire_time>me.fire_time_max) { me.fire_size=0.0; me.fire_time=0.0; }
+			}
 		}
-		else { me.fire_size = 0.0; }
+		else { me.fire_size = 0.0; me.fire_time=0.0; }
 	}
 	else { //keyboard controls
 		if(keys[LEFT] && me.da>-me.max_da) { me.da -= me.dda; }
@@ -245,11 +250,14 @@ function controls(dt) {
 		else if(!keys[DOWN] && !keys[UP]) { me.dv = 0.0; }
 	
 		if(keys[SPACE]) {
-			me.fire_size += me.fire_speed;
-			if(me.fire_size==me.max_fire_size) { me.fire_size=0.0; }
-			if(me.fire_size>me.max_fire_size) { me.fire_size=me.max_fire_size; }
+			me.fire_size += me.fire_speed*dt;
+			if(me.fire_size>=me.max_fire_size) {
+				me.fire_size=me.max_fire_size;
+				me.fire_time += dt;
+				if(me.fire_time>me.fire_time_max) { me.fire_size=0.0; me.fire_time=0.0; }
+			}
 		}
-		else { me.fire_size = 0.0; }
+		else { me.fire_size = 0.0; me.fire_time=0.0; }
 	}
 }
 
