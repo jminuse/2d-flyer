@@ -142,15 +142,19 @@ var Game = (function() {
 		this.SINGLE_GAME = 0; this.CAMPAIGN = 1;
 		this.mode = this.SINGLE_GAME;
 		this.maps = [];
-		this.current_map = new Map();
-		this.player = new Player();
+	}
+	Game.prototype.next_level = function() {
+		this.map = new Map();
+		this.me = new Player();
+		display(this.map.objective_string, 3000);
+		map = this.map;
+		me = this.me;
 	}
 	return Game;
 })();
 
 var game = new Game();
-var map = game.current_map;
-var me = game.player;
+game.next_level();
 
 keys = [];
 for(var i=0; i<256; i++) {
@@ -208,7 +212,6 @@ var g=canvas.getContext("2d");
 canvas.style.backgroundColor = "#0A1";
 
 info = document.getElementById('info');
-display(map.objective_string, 3000);
 
 function controls(dt) {
 	if(orientation_set) { //accelerometer controls
@@ -293,10 +296,10 @@ function game_logic(dt) {
 					map.defeat = true;
 					display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', false);
 					if('ontouchend' in document) {
-						document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
+						document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; game.next_level(); };
 					}
 					else {
-						document.onmouseup = function() { document.onmouseup=null; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
+						document.onmouseup = function() { document.onmouseup=null; game.next_level(); };
 					}
 				}
 			}
@@ -377,10 +380,10 @@ function game_logic(dt) {
 					map.victory = true;
 					display('Victory!<br><small>Click to continue</small>', false, 'blue');
 					if('ontouchend' in document) {
-						document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
+						document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; game.next_level(); };
 					}
 					else {
-						document.onmouseup = function() { document.onmouseup=null; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
+						document.onmouseup = function() { document.onmouseup=null; game.next_level(); };
 					}
 				}
 			}
