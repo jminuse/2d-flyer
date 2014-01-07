@@ -111,6 +111,7 @@ var Map = (function() {
 		this.hills = [];
 		this.objects = [];
 		this.wagon_count = 0;
+		this.wagons_burned_count = 0;
 
 		for(var i=0; i<0; i++) {
 			this.hills.push( {x:Math.random()*this.width, y:Math.random()*this.height} );
@@ -365,8 +366,8 @@ function draw() {
 		}
 		else if(o.type==WAGON) {
 			var w = o;
-			var dist_squared = (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y)
-			if(!w.burned && dist_squared<nearest_goal_distance) {
+			var dist_squared = (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y);
+			if(!w.burned && (!nearest_goal || dist_squared<nearest_goal_distance)) {
 				nearest_goal = w;
 				nearest_goal_distance = dist_squared;
 			}
@@ -376,11 +377,8 @@ function draw() {
 			
 			if( (w.x-x)*(w.x-x) + (w.y-y)*(w.y-y) < me.fire_size*me.fire_size*1.0*1.0 ) {
 				w.burned = true;
-				var burned_count = 0;
-				for(var j=0; j<map.objects.length; j++) {
-					if( map.objects[j].burned ) { burned_count+=1; }
-				}
-				if(burned_count==map.wagon_count) {
+				map.wagons_burned_count+=1;
+				if(map.wagons_burned_count==map.wagon_count) {
 					map.victory = true;
 					display('Victory!<br><small>Click to continue</small>', 10000, 'blue');
 					document.onmousedown = function() { location.reload(); document.onmousedown=null; };
@@ -535,6 +533,7 @@ function draw() {
 		g.strokeStyle = '#00A';
 		g.stroke();
 	}
+	else { console.log('No goal?'); }
 	
 	g.restore();
 	
