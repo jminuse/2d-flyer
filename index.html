@@ -215,7 +215,7 @@ function draw() {
 		var dead_band = 2; //degrees
 		var range = 30;
 		var left_right_sensitivity = 15;
-		var forward_back_sensitivity = 5;
+		var forward_back_sensitivity = 2;
 
 		if(left_right_tilt<-dead_band && me.da>-me.max_da) { me.da = -left_right_sensitivity*me.dda*Math.min(1, Math.abs(left_right_tilt-dead_band)/range); }
 		else if(left_right_tilt>dead_band && me.da<me.max_da) { me.da = left_right_sensitivity*me.dda*Math.min(1, Math.abs(left_right_tilt-dead_band)/range); }
@@ -225,7 +225,7 @@ function draw() {
 		else if(forward_back_tilt<-dead_band && me.dv<me.max_dv) { me.dv = forward_back_sensitivity*me.ddv*Math.min(1, Math.abs(forward_back_tilt-dead_band)/range); }
 		else if(forward_back_tilt>-dead_band && forward_back_tilt<dead_band) { me.dv = 0.0; }
 		
-		if(touchscreen_touched) {
+		if(!touchscreen_touched) {
 			me.fire_size += me.fire_speed;
 			if(me.fire_size==me.max_fire_size) { me.fire_size=0.0; }
 			if(me.fire_size>me.max_fire_size) { me.fire_size=me.max_fire_size; }
