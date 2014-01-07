@@ -214,12 +214,12 @@ function draw() {
 	if(orientation_set) { //accelerometer controls
 		var sensitivity = 10; //degrees
 
-		if(left_right_tilt<-sensitivity && me.da>-me.max_da) { me.da -= me.dda; }
-		else if(left_right_tilt>sensitivity && me.da<me.max_da) { me.da += me.dda; }
+		if(left_right_tilt<-sensitivity && me.da>-me.max_da) { me.da -= me.dda*Math.abs(left_right_tilt)/sensitivity; }
+		else if(left_right_tilt>sensitivity && me.da<me.max_da) { me.da += me.dda*Math.abs(left_right_tilt)/sensitivity; }
 		else if(left_right_tilt>-sensitivity && left_right_tilt<sensitivity) { me.da = 0.0; }
 
-		if(forward_back_tilt>sensitivity && me.dv>-me.max_dv) { me.dv -= me.ddv*2; }
-		else if(forward_back_tilt<-sensitivity && me.dv<me.max_dv) { me.dv += me.ddv; }
+		if(forward_back_tilt>sensitivity && me.dv>-me.max_dv) { me.dv -= me.ddv*2*Math.abs(forward_back_tilt)/sensitivity; }
+		else if(forward_back_tilt<-sensitivity && me.dv<me.max_dv) { me.dv += me.ddv*Math.abs(forward_back_tilt)/sensitivity; }
 		else if(forward_back_tilt>-sensitivity && forward_back_tilt<sensitivity) { me.dv = 0.0; }
 		
 		if(touchscreen_touched) {
