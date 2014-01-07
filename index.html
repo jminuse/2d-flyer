@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Dragon</title>
+<title>The Republic's Dragon</title>
 <meta name="viewport" content="width=device-width, user-scalable=no" />
 <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
@@ -141,9 +141,10 @@ var Map = (function() {
 
 var Game = (function() {
 	function Game() {
-		this.SINGLE_GAME = 0; this.CAMPAIGN = 1;
-		this.mode = this.SINGLE_GAME;
+		this.NOT_STARTED = 0; this.SINGLE_GAME = 1; this.CAMPAIGN = 2;
+		this.mode = this.NOT_STARTED;
 		this.maps = [];
+		display("<div style='font-size:200%;'>The Republic's Dragon</div>Click to start", false, 'black');
 	}
 	Game.prototype.next_level = function() {
 		this.map = new Map();
@@ -151,12 +152,11 @@ var Game = (function() {
 		display(this.map.objective_string, 3000);
 		map = this.map;
 		me = this.me;
-	}
+	};
 	return Game;
 })();
 
 var game = new Game();
-game.next_level();
 
 keys = [];
 for(var i=0; i<256; i++) {
@@ -176,6 +176,7 @@ touchscreen_touched = false;
 if('ontouchstart' in document) {
 	document.ontouchstart = function(e) {
 		touchscreen_touched=true;
+		if(game.mode==game.NOT_STARTED) { game.mode=game.SINGLE_GAME; game.next_level(); }
 	};
 	document.ontouchend = function(e) {
 		touchscreen_touched=false;
@@ -183,6 +184,11 @@ if('ontouchstart' in document) {
 	document.ontouchmove = function(e) {
 		e.preventDefault(); //stop rubber band effect
 	};
+}
+else {
+	document.onmousedown = function(e) {
+		if(game.mode==game.NOT_STARTED) { game.mode=game.SINGLE_GAME; game.next_level(); }
+	}
 }
 
 orientation_set = false;
@@ -408,6 +414,9 @@ function draw() {
 	previous_time = current_time;
 	if(dt>500) { return; } //do not count offscreen time
 	
+	if(game.mode==game.NOT_STARTED) {
+		return;
+	}
 	if(map.defeat) {
 		return;
 	}
