@@ -35,6 +35,29 @@ function display(s, t, color) {
 	setTimeout("display_box.style.display='none';", t);
 }
 
+SINGLE_GAME = 0; CAMPAIGN = 1;
+PLAYING = 0; VICTORY = 1; DEFEAT = 2;
+var Game = (function() {
+	function Game() {
+		this.mode = SINGLE_GAME;
+		this.state = PLAYING;
+		this.levels = [];
+	}
+	return Game;
+})();
+
+var Level = (function() {
+	function Level() {
+		this.win_condition = null;
+		this.loss_condition = null;
+		this.map_w = 2000;
+		this.map_h = 2000;
+		this.setting = null;
+		this.enemy_config = null;
+	}
+	return Level;
+})();
+
 var Player = (function() {
 	function Player() {
 		this.a = pi/2;
@@ -289,7 +312,8 @@ function draw() {
 				me.health -= damage;
 				if(me.health<=0) {
 					map.defeat = true;
-					display('We are defeated!<br>Pull back!', 5000);
+					display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', 5000);
+					document.onmousedown = function() { location.reload(); document.onmousedown=null; };
 				}
 			}
 		}
@@ -368,7 +392,8 @@ function draw() {
 				}
 				if(burned_count==map.wagon_count) {
 					map.victory = true;
-					display('Victory!', 10000, 'blue');
+					display('Victory!<br><small>Click to continue</small>', 10000, 'blue');
+					document.onmousedown = function() { location.reload(); document.onmousedown=null; };
 				}
 			}
 		}
