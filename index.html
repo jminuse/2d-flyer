@@ -177,6 +177,7 @@ if('ontouchstart' in document) {
 	document.ontouchmove = function(e) {
 		e.preventDefault(); //stop rubber band effect
 	};
+	document.onmouseup = function(e) { alert('!'); }
 }
 
 orientation_set = false;
