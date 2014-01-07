@@ -334,8 +334,8 @@ function game_logic(dt) {
 			if(o.x>map.width-0) { o.x = map.width-0; }
 			if(o.y>map.height-0) { o.y = map.height-0; }
 			
-			var x = me.x - me.sin_neg_a*60;
-			var y = me.y - me.cos_neg_a*60;
+			var x = me.x - me.sin_neg_a*40;
+			var y = me.y - me.cos_neg_a*40;
 		
 			var aim_angle = Math.atan2(c.x-me.x, c.y-me.y);
 			var dif = c.a-aim_angle;
@@ -378,8 +378,8 @@ function game_logic(dt) {
 				nearest_goal_distance = dist_squared;
 			}
 			if( w.burned || dist_squared > look_distance*look_distance) { continue; }
-			var x = me.x - me.sin_neg_a*60;
-			var y = me.y - me.cos_neg_a*60;
+			var x = me.x - me.sin_neg_a*40;
+			var y = me.y - me.cos_neg_a*40;
 			
 			if( (w.x-x)*(w.x-x) + (w.y-y)*(w.y-y) < me.fire_size*me.fire_size*1.0*1.0 ) {
 				w.burned = true;
