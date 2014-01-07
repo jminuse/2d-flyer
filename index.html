@@ -164,7 +164,7 @@ if (window.DeviceOrientationEvent) {
     // alpha is the compass direction the device is facing in degrees
     var dir = event.alpha;*/
 		
-		var a = event.acceleration;
+		var a = event.accelerationIncludingGravity;
 		if(default_acceleration===null) { default_acceleration = a; alert(a); return; }
     
   	var ax = a[0]-default_acceleration[0];
