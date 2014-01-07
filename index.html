@@ -292,12 +292,7 @@ function game_logic(dt) {
 				if(me.health<=0) {
 					map.defeat = true;
 					display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', false);
-					if(document.touchend) {
-						document.touchend = function() { document.touchend=null; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
-					}
-					else {
-						document.onmouseup = function() { document.onmouseup=null; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
-					}
+					document.onmouseup = function() { document.onmouseup=null; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
 				}
 			}
 		}
@@ -376,12 +371,7 @@ function game_logic(dt) {
 				if(map.wagons_burned_count==map.wagon_count) {
 					map.victory = true;
 					display('Victory!<br><small>Click to continue</small>', false, 'blue');
-					if('ontouchend' in document) {
-						document.ontouchend = function() { document.ontouchend=null; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
-					}
-					else {
-						document.onmouseup = function() { document.onmouseup=null; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
-					}
+					document.onmouseup = function() { document.onmouseup=null; me = new Player(); map = new Map(); display(map.objective_string, 3000); };
 				}
 			}
 		}
