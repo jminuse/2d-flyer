@@ -165,7 +165,7 @@ if (window.DeviceOrientationEvent) {
     var dir = event.alpha;*/
 		
 		var a = event.acceleration;
-		if(default_acceleration===null) { default_acceleration = a; return; }
+		if(default_acceleration===null) { default_acceleration = a; alert(a); return; }
     
   	var ax = a[0]-default_acceleration[0];
     var ay = a[1]-default_acceleration[1];
