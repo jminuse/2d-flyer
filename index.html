@@ -408,6 +408,16 @@ function draw() {
 			g.roundRect(-6, -18, 6*2, 18*2, 4).fill();
 			g.roundRect(-3, -28, 6, 12, 3).fill();
 
+			g.beginPath();
+			g.arc(0, 13, 10, 0.3*pi, 0.7*pi);
+			g.lineTo(0, 13);
+			
+			g.moveTo(0, -27);
+			g.arc(0, -27, 12, 0.35*pi, 0.65*pi);
+			g.lineTo(0, -27);
+			g.fillStyle=c.burned ? '#000' : '#321';
+			g.fill();
+
 			g.fillStyle=c.burned ? '#000' : '#777';
 			g.fillRect(1,-24,2,24);
 			g.fillStyle=c.burned ? '#000' : 'brown';
