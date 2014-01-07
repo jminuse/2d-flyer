@@ -530,7 +530,11 @@ function draw() {
 		g.beginPath();
 		g.moveTo(me.x + 15*xx/L, me.y + 15*yy/L);
 		g.lineTo(me.x + 50*xx/L, me.y + 50*yy/L);
-		g.strokeStyle = '#00A';
+		g.quadraticCurveTo( me.x + 40*xx/L, me.y + 40*yy/L,  me.x + 30*xx/L - 10*yy/L, me.y + 30*yy/L + 10*xx/L);
+		g.moveTo(me.x + 50*xx/L, me.y + 50*yy/L);
+		g.quadraticCurveTo( me.x + 40*xx/L, me.y + 40*yy/L,  me.x + 30*xx/L + 10*yy/L, me.y + 30*yy/L - 10*xx/L);
+		g.strokeStyle = '#FFF';
+		g.lineWidth = 2;
 		g.stroke();
 	}
 	else { console.log('No goal?'); }
