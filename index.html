@@ -213,9 +213,9 @@ display(map.objective_string, 3000);
 function controls(dt) {
 	if(orientation_set) { //accelerometer controls
 		var dead_band = 2; //degrees
-		var range = 30;
-		var left_right_sensitivity = 15;
-		var forward_back_sensitivity = 2;
+		var range = 40;
+		var left_right_sensitivity = 10;
+		var forward_back_sensitivity = 1;
 
 		if(left_right_tilt<-dead_band && me.da>-me.max_da) { me.da = -left_right_sensitivity*me.dda*Math.min(1, Math.abs(left_right_tilt-dead_band)/range); }
 		else if(left_right_tilt>dead_band && me.da<me.max_da) { me.da = left_right_sensitivity*me.dda*Math.min(1, Math.abs(left_right_tilt-dead_band)/range); }
