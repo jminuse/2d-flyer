@@ -153,6 +153,14 @@ LEFT = 37; RIGHT = 39;
 UP = 38; DOWN = 40;
 SPACE = 32;
 
+touchscreen_touched = false;
+document.ontouchstart = function(e) {
+	touchscreen_touched=true;
+};
+document.ontouchend = function(e) {
+	touchscreen_touched=false;
+};
+
 orientation_set = false;
 if (window.DeviceOrientationEvent) {
 	var accel = document.getElementById('accel');
@@ -212,6 +220,13 @@ function draw() {
 		if(forward_back_tilt>sensitivity && me.dv>-me.max_dv) { me.dv -= me.ddv*2; }
 		else if(forward_back_tilt<-sensitivity && me.dv<me.max_dv) { me.dv += me.ddv; }
 		else if(forward_back_tilt>-sensitivity && forward_back_tilt<sensitivity) { me.dv = 0.0; }
+		
+		if(touchscreen_touched) {
+			me.fire_size += me.fire_speed;
+			if(me.fire_size==me.max_fire_size) { me.fire_size=0.0; }
+			if(me.fire_size>me.max_fire_size) { me.fire_size=me.max_fire_size; }
+		}
+		else { me.fire_size = 0.0; }
 	}
 	else { //keyboard controls
 		if(keys[LEFT] && me.da>-me.max_da) { me.da -= me.dda; }
