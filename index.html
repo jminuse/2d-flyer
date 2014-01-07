@@ -215,12 +215,12 @@ function draw() {
 		var sensitivity = 3; //degrees
 		var range = 30;
 
-		if(left_right_tilt<-sensitivity && me.da>-me.max_da) { me.da = -me.dda*Math.min(1, Math.abs(left_right_tilt-sensitivity)/range); }
-		else if(left_right_tilt>sensitivity && me.da<me.max_da) { me.da = me.dda*Math.min(1, Math.abs(left_right_tilt-sensitivity)/range); }
+		if(left_right_tilt<-sensitivity && me.da>-me.max_da) { me.da = -10*me.dda*Math.min(1, Math.abs(left_right_tilt-sensitivity)/range); }
+		else if(left_right_tilt>sensitivity && me.da<me.max_da) { me.da = 10*me.dda*Math.min(1, Math.abs(left_right_tilt-sensitivity)/range); }
 		else if(left_right_tilt>-sensitivity && left_right_tilt<sensitivity) { me.da = 0.0; }
 
-		if(forward_back_tilt>sensitivity && me.dv>-me.max_dv) { me.dv = -me.ddv*2*Math.min(1, Math.abs(forward_back_tilt-sensitivity)/range); }
-		else if(forward_back_tilt<-sensitivity && me.dv<me.max_dv) { me.dv = me.ddv*Math.min(1, Math.abs(forward_back_tilt-sensitivity)/range); }
+		if(forward_back_tilt>sensitivity && me.dv>-me.max_dv) { me.dv = -10*me.ddv*2*Math.min(1, Math.abs(forward_back_tilt-sensitivity)/range); }
+		else if(forward_back_tilt<-sensitivity && me.dv<me.max_dv) { me.dv = 10*me.ddv*Math.min(1, Math.abs(forward_back_tilt-sensitivity)/range); }
 		else if(forward_back_tilt>-sensitivity && forward_back_tilt<sensitivity) { me.dv = 0.0; }
 		
 		if(touchscreen_touched) {
