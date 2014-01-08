@@ -36,8 +36,8 @@ CanvasRenderingContext2D.prototype.star = function(x, y, r, p, m)
 		this.rotate(Math.PI / p);
 		this.lineTo(0, 0 - r);
 	}
-	this.fill();
 	this.restore();
+	return this;
 }
 
 var display_box = document.getElementById('display');
@@ -230,12 +230,12 @@ display_box.style.fontSize = (40*scale)+'px';
 var single_game_button=document.getElementById("single-game-button");
 single_game_button.style.right = canvas.offsetLeft+'px';
 single_game_button.style.top = (canvas.height-80*scale)+'px';
-single_game_button.style.fontSize = 25*scale+'px';
+single_game_button.style.fontSize = 22*scale+'px';
 single_game_button.style.padding = 3*scale+'px';
 var campaign_button=document.getElementById("campaign-button");
 campaign_button.style.right = canvas.offsetLeft+'px';
 campaign_button.style.top = (canvas.height-40*scale)+'px';
-campaign_button.style.fontSize = 25*scale+'px';
+campaign_button.style.fontSize = 22*scale+'px';
 campaign_button.style.padding = 3*scale+'px';
 //var w = Math.max(single_game_button.offsetWidth, campaign_button.offsetWidth)+'px';
 //campaign_button.style.width = w
@@ -454,6 +454,14 @@ function draw() {
 	if(dt>500) { return; } //do not count offscreen time
 	
 	if(game.mode==game.NOT_STARTED) {
+		canvas.width = canvas.width;
+		g.fillStyle='#FFF';
+		//g.star(canvas.width/2, canvas.height-125*scale, 20*scale, 5, 0.35).fill();
+		for(var t=0; t<13; t++) {
+			var x = 50*Math.cos(-t*Math.PI/12)+canvas.width/2;
+			var y = 50*Math.sin(-t*Math.PI/12)+canvas.height-100*scale;
+			g.star(x, y, 6*scale, 5, 0.35).fill();
+		}
 		return;
 	}
 	if(map.defeat) {
