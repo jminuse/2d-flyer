@@ -11,7 +11,7 @@
 <body style="background-color:black; color:#AAA; overflow:hidden;">
 	<canvas id="myCanvas" style="display:block; position:absolute; top:0px; left:50%; background:#0A1;"></canvas>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
-	<div style='position:absolute; top:0em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
+	<div style='position:absolute; top:1em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
 	<div class='bookmark' id='single-game-button'>Single game</div>
 	<div class='bookmark' id='campaign-button'>Campaign</div>
 <script>
@@ -110,10 +110,13 @@ var MapObject = (function() {
 })();
 
 var Map = (function() {
-	function Map() {
+	function Map(game) {
 		this.win_condition = null;
 		this.loss_condition = null;
-		this.objective_string = 'Objective: burn all supply wagons';
+		if(game.mode==game.SINGLE_GAME)
+			this.objective_string = 'Objective: burn all supply wagons';
+		else
+			this.objective_string = 'Level '+(game.level);
 		this.width = 2000;
 		this.height = 2000;
 		this.victory = false;
@@ -163,13 +166,14 @@ var Game = (function() {
 	function Game() {
 		this.NOT_STARTED = 0; this.SINGLE_GAME = 1; this.CAMPAIGN = 2;
 		this.mode = this.NOT_STARTED;
-		this.maps = [];
-		//display("<div style='font-size:50%; margin:0.4em 0 0 0; color:#037;'>James Stevenson</div><div style='font-size:200%;'>The Republic's Dragon</div>", false, 'black');
-		//display("<div style='font-size:200%;'>The Republic's Dragon</div><div style='font-size:50%; margin-top:0.5em; color:#037;'>James Stevenson</div>", false, 'black');
-		display("<div style='font-size:200%;'>The Republic's Dragon</div>", false, 'black');
+		this.level = 0;
+		display("<div style='font-size:200%; margin-top:-0.5em;'>The Republic's Dragon</div>", false, 'black');
 	}
 	Game.prototype.next_level = function() {
-		this.map = new Map();
+		if(this.mode==this.CAMPAIGN) {
+			this.level+=1;
+		}
+		this.map = new Map(this);
 		this.me = new Player();
 		display(this.map.objective_string, 3000);
 		map = this.map;
@@ -268,7 +272,7 @@ single_game_button.onmousedown = function(e) {
 	game.next_level();
 }
 campaign_button.onmousedown = function(e) {
-	game.mode=game.SINGLE_GAME;
+	game.mode=game.CAMPAIGN;
 	single_game_button.style.display='none';
 	campaign_button.style.display='none';
 	game.next_level();
