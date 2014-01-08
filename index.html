@@ -133,10 +133,27 @@ var MapObject = (function() {
 	return MapObject;
 })();
 
+var Conditions = (function() {
+	function Conditions() {
+		this.wagons_destroyed = function(game) {
+			return game.map.wagon_count==game.map.wagons_burned_count;
+		}
+		this.enemies_destroyed = function(game) {
+			return game.map.enemy_count==game.map.enemies_destroyed_count;
+		}
+		this.character_dead = function(game) {
+			return game.me.health<=0;
+		}
+	}
+	return Conditions;
+})();
+
+conditions = new Conditions();
+
 var Map = (function() {
 	function Map(game) {
-		this.win_condition = null;
-		this.loss_condition = null;
+		this.win_condition = conditions.wagons_destroyed;
+		this.loss_condition = conditions.character_dead;
 		if(game.mode==game.SINGLE_GAME)
 			this.objective_string = 'Objective: burn all supply wagons';
 		else
@@ -149,6 +166,8 @@ var Map = (function() {
 		this.objects = [];
 		this.wagon_count = 0;
 		this.wagons_burned_count = 0;
+		this.enemy_count=0;
+		this.enemies_destroyed_count=0;
 
 		for(var i=0; i<0; i++) {
 			this.hills.push( {x:Math.random()*this.width, y:Math.random()*this.height} );
@@ -164,6 +183,7 @@ var Map = (function() {
 			var yy = y+Math.random()*50;
 			var w = new MapObject(WAGON,xx,yy,Math.random()*2*Math.PI);
 			this.objects.push( w );
+			this.enemy_count += 1;
 			this.wagon_count += 1;
 			
 			for(var theta=0; theta<2*Math.PI; theta+=2*Math.PI/10) {
@@ -171,17 +191,26 @@ var Map = (function() {
 				var yyy = yy+Math.sin(theta)*100;
 				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
 				this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
+				this.enemy_count += 1;
 				
 				xxx = xx+Math.cos(theta)*50;
 				yyy = yy+Math.sin(theta)*50;
 				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
 				this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-Math.PI/2,w) );
+				this.enemy_count += 1;
 				
 				xxx = xx+Math.cos(theta)*150;
 				yyy = yy+Math.sin(theta)*150;
 				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
 				this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-Math.PI/2,w) );
+				this.enemy_count += 1;
 			}
+		}
+		for(var m=0; m<100; m++) {
+			var x=Math.random()*this.width;
+			var y=Math.random()*this.height;
+			this.objects.push( new MapObject(INFANTRY,x,y,Math.random()*Math.PI*2,w) );
+			this.enemy_count += 1;
 		}
 	}
 	return Map;
@@ -384,21 +413,11 @@ function game_logic(dt) {
 			}
 			else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
 				var kinetic_energy = (p.dx-me.dx)*(p.dx-me.dx) + (p.dy-me.dy)*(p.dy-me.dy);
-				var damage = 5*((30.0*kinetic_energy)|0);
-				if(p.type==BULLET) { damage = 0.5; }
+				var damage = Math.min(30, 5*((50.0*kinetic_energy)|0) );
+				if(p.type==BULLET) { damage = 1; }
 				if(damage===0) { continue; }
 				p.x = -1000.0; p.y = -1000.0;
 				me.health -= damage;
-				if(me.health<=0) {
-					map.defeat = true;
-					display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', false);
-					if('ontouchend' in document) {
-						document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; game.next_level(); };
-					}
-					else {
-						document.onmouseup = function() { document.onmouseup=null; game.next_level(); };
-					}
-				}
 			}
 		}
 		else if(o.type==CANNON || o.type==INFANTRY || o.type==CAVALRY) {
@@ -408,10 +427,12 @@ function game_logic(dt) {
 			c.dx = -c.v*Math.sin(c.a);
 			c.dy = -c.v*Math.cos(c.a);
 			
-			var guarding_distance_squared = (c.x-c.guarding.x)*(c.x-c.guarding.x) + (c.y-c.guarding.y)*(c.y-c.guarding.y);
-			if( guarding_distance_squared > c.guarding_distance*c.guarding_distance ) {
-				o.dx += c.x<c.guarding.x ? 0.01 : -0.01;
-				o.dy += c.y<c.guarding.y ? 0.01 : -0.01;
+			if(c.guarding) {
+				var guarding_distance_squared = (c.x-c.guarding.x)*(c.x-c.guarding.x) + (c.y-c.guarding.y)*(c.y-c.guarding.y);
+				if( guarding_distance_squared > c.guarding_distance*c.guarding_distance ) {
+					o.dx += c.x<c.guarding.x ? 0.01 : -0.01;
+					o.dy += c.y<c.guarding.y ? 0.01 : -0.01;
+				}
 			}
 			
 			if( (o.x+dt*o.dx-me.x)*(o.x+dt*o.dx-me.x) + (o.y+dt*o.dy-me.y)*(o.y+dt*o.dy-me.y) > 100*100 ) {
@@ -473,17 +494,27 @@ function game_logic(dt) {
 			if( (w.x-x)*(w.x-x) + (w.y-y)*(w.y-y) < me.fire_size*me.fire_size*1.0*1.0 ) {
 				w.burned = true;
 				map.wagons_burned_count+=1;
-				if(map.wagons_burned_count==map.wagon_count) {
-					map.victory = true;
-					display('Victory!<br><small>Click to continue</small>', false, 'blue');
-					if('ontouchend' in document) {
-						document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; game.next_level(); };
-					}
-					else {
-						document.onmouseup = function() { document.onmouseup=null; game.next_level(); };
-					}
-				}
 			}
+		}
+	}
+	if(map.loss_condition(game)) {
+		map.defeat = true;
+		display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', false);
+		if('ontouchend' in document) {
+			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; game.next_level(); };
+		}
+		else {
+			document.onmouseup = function() { document.onmouseup=null; game.next_level(); };
+		}
+	}
+	if(map.win_condition(game)) {
+		map.victory = true;
+		display('Victory!<br><small>Click to continue</small>', false, 'blue');
+		if('ontouchend' in document) {
+			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; game.next_level(); };
+		}
+		else {
+			document.onmouseup = function() { document.onmouseup=null; game.next_level(); };
 		}
 	}
 	return nearest_goal;
