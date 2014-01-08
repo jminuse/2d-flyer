@@ -4,9 +4,6 @@
 <title>The Republic's Dragon</title>
 <meta name="viewport" content="width=device-width, user-scalable=no" />
 <meta name="apple-mobile-web-app-capable" content="yes">
-<style>
-.bookmark{position:absolute;background-color:#27F; color:black; cursor:pointer;}
-</style>
 </head>
 <body style="background-color:black; color:#AAA; overflow:hidden;">
 	<canvas id="myCanvas" style="display:block; position:absolute; top:0px; left:50%; background:#0A1;"></canvas>
@@ -279,29 +276,18 @@ var scale = canvas.height/480;
 display_box.style.fontSize = (40*scale)+'px';
 
 var single_game_button=document.getElementById("single-game-button");
-single_game_button.style.right = canvas.offsetLeft+'px';
 single_game_button.style.top = (canvas.height-60*scale)+'px';
-single_game_button.style.fontSize = 22*scale+'px';
-single_game_button.style.padding = 3*scale+'px';
-single_game_button.style.paddingLeft = 17*scale+'px';
+
 var campaign_button=document.getElementById("campaign-button");
-campaign_button.style.right = canvas.offsetLeft+'px';
 campaign_button.style.top = (canvas.height-100*scale)+'px';
-campaign_button.style.fontSize = 22*scale+'px';
-campaign_button.style.padding = 3*scale+'px';
-campaign_button.style.paddingLeft = 17*scale+'px';
-//var w = Math.max(single_game_button.offsetWidth, campaign_button.offsetWidth)+'px';
-//campaign_button.style.width = w
-//single_game_button.style.width = w;
+
 var head = document.getElementsByTagName('head')[0];
 var style = document.createElement('style');
-var rules = document.createTextNode(".bookmark:after{content:'';display:block;border:"+(15*scale)+"px solid transparent;border-left-color:#0A1;position:absolute;left:0;bottom:0;}");
+var rules = document.createTextNode(".bookmark{position:absolute;background-color:#27F; color:black; cursor:pointer;right:"+canvas.offsetLeft+"px;font-size:"+(22*scale)+"px;padding:"+(3*scale)+"px;padding-left:"+(17*scale)+"px;}\n.bookmark:after{content:'';display:block;border:"+(15*scale)+"px solid transparent;border-left-color:#0A1;position:absolute;left:0;bottom:0;}");
 style.type = 'text/css';
-if(style.styleSheet)
-    style.styleSheet.cssText = rules.nodeValue;
-else style.appendChild(rules);
+if(style.styleSheet) { style.styleSheet.cssText = rules.nodeValue; }
+else { style.appendChild(rules); }
 head.appendChild(style);
-
 
 var look_distance = 480;
 var g=canvas.getContext("2d");
@@ -389,7 +375,7 @@ function game_logic(dt) {
 	var valid_projectile = null;
 	var nearest_goal = null;
 	var nearest_goal_distance = 1e6;
-	for(var i=0; i<map.objects.length; i++) { //game logic
+	for(var i=0; i<map.objects.length; i++) {
 		var o = map.objects[i];
 		var dist_squared = (o.x-me.x)*(o.x-me.x) + (o.y-me.y)*(o.y-me.y);
 		if(map.is_goal(o) && (!nearest_goal || dist_squared<nearest_goal_distance)) {
