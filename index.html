@@ -9,8 +9,8 @@
 	<canvas id="myCanvas" style="display:block; position:absolute; top:0px; left:50%;"></canvas>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
 	<div style='position:absolute; top:1em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
-	<div style='position:absolute; background-color:#F02; color:black;' id='single-game-button'>Single game</div>
-	<div style='position:absolute; background-color:#F02; color:black;' id='campaign-button'>Campaign</div>
+	<div style='position:absolute; background-color:#F02; color:black; cursor:pointer;' id='single-game-button'>Single game</div>
+	<div style='position:absolute; background-color:#F02; color:black; cursor:pointer;' id='campaign-button'>Campaign</div>
 <script>
 CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
   if (w < 2 * r) { r = w / 2; }
@@ -24,6 +24,21 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
   this.closePath();
   return this;
 };
+CanvasRenderingContext2D.prototype.star = function(x, y, r, p, m)
+{
+	this.save();
+	this.beginPath();
+	this.translate(x, y);
+	this.moveTo(0,0-r);
+	for (var i = 0; i < p; i++) {
+		this.rotate(Math.PI / p);
+		this.lineTo(0, 0 - (r*m));
+		this.rotate(Math.PI / p);
+		this.lineTo(0, 0 - r);
+	}
+	this.fill();
+	this.restore();
+}
 
 var display_box = document.getElementById('display');
 function display(s, t, color) {
