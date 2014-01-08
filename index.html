@@ -156,30 +156,31 @@ var Map = (function() {
 		
 		for(var j=0; j<10; j++) { this.objects.push( new MapObject(CANNONBALL) ); }
 
-		for(var x=0; x<this.width; x+=550) {
-			for(var y=0; y<this.height; y+=550) {
-				var xx = x+Math.random()*50;
-				var yy = y+Math.random()*50;
-				var w = new MapObject(WAGON,xx,yy,Math.random()*2*Math.PI);
-				this.objects.push( w );
-				this.wagon_count += 1;
+		for(var k=0; k<10; k++) {
+			var x=Math.random()*this.width;
+			var y=Math.random()*this.height;
+		
+			var xx = x+Math.random()*50;
+			var yy = y+Math.random()*50;
+			var w = new MapObject(WAGON,xx,yy,Math.random()*2*Math.PI);
+			this.objects.push( w );
+			this.wagon_count += 1;
+			
+			for(var theta=0; theta<2*Math.PI; theta+=2*Math.PI/10) {
+				var xxx = xx+Math.cos(theta)*100;
+				var yyy = yy+Math.sin(theta)*100;
+				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
+				this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
 				
-				for(var theta=0; theta<2*Math.PI; theta+=2*Math.PI/10) {
-					var xxx = xx+Math.cos(theta)*100;
-					var yyy = yy+Math.sin(theta)*100;
-					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
-					
-					xxx = xx+Math.cos(theta)*50;
-					yyy = yy+Math.sin(theta)*50;
-					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-Math.PI/2,w) );
-					
-					xxx = xx+Math.cos(theta)*150;
-					yyy = yy+Math.sin(theta)*150;
-					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-Math.PI/2,w) );
-				}
+				xxx = xx+Math.cos(theta)*50;
+				yyy = yy+Math.sin(theta)*50;
+				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
+				this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-Math.PI/2,w) );
+				
+				xxx = xx+Math.cos(theta)*150;
+				yyy = yy+Math.sin(theta)*150;
+				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
+				this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-Math.PI/2,w) );
 			}
 		}
 	}
