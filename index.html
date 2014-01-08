@@ -139,12 +139,12 @@ var Map = (function() {
 		if(game.mode==game.SINGLE_GAME) {
 			this.objective_string = 'Objective: burn all supply wagons';
 			this.win_condition = function() { return game.map.wagon_count==game.map.wagons_burned_count; }
-			//this.is_goal = 
+			this.is_goal = function(obj) { return !obj.burned && obj.type==WAGON; }
 		}
 		else {
 			this.objective_string = 'Objective: destroy all enemies';
 			this.win_condition = function(game) { return game.map.enemy_count==game.map.enemies_destroyed_count; }
-			//this.is_goal = 
+			this.is_goal = function(obj) { return !obj.burned && obj.type!=BULLET && obj.type!=CANNONBALL; }
 		}
 		this.width = 2000;
 		this.height = 2000;
@@ -391,6 +391,11 @@ function game_logic(dt) {
 	var nearest_goal_distance = 1e6;
 	for(var i=0; i<map.objects.length; i++) { //game logic
 		var o = map.objects[i];
+		var dist_squared = (o.x-me.x)*(o.x-me.x) + (o.y-me.y)*(o.y-me.y);
+		if(map.is_goal(o) && (!nearest_goal || dist_squared<nearest_goal_distance)) {
+			nearest_goal = o;
+			nearest_goal_distance = dist_squared;
+		}
 		if(o.type==CANNONBALL || o.type==BULLET) {
 			var p = o;
 			if( p.x == -1000.0 ) { valid_projectile = p; continue; }
@@ -471,11 +476,6 @@ function game_logic(dt) {
 		}
 		else if(o.type==WAGON) {
 			var w = o;
-			var dist_squared = (w.x-me.x)*(w.x-me.x) + (w.y-me.y)*(w.y-me.y);
-			if(!w.burned && (!nearest_goal || dist_squared<nearest_goal_distance)) {
-				nearest_goal = w;
-				nearest_goal_distance = dist_squared;
-			}
 			if( w.burned || dist_squared > look_distance*look_distance) { continue; }
 			var x = me.x - me.sin_neg_a*40;
 			var y = me.y - me.cos_neg_a*40;
