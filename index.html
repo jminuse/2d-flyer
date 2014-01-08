@@ -458,8 +458,8 @@ function draw() {
 		g.fillStyle='#FFF';
 		//g.star(canvas.width/2, canvas.height-125*scale, 20*scale, 5, 0.35).fill();
 		for(var t=0; t<13; t++) {
-			var x = 50*Math.cos(-t*Math.PI/12)+canvas.width/2;
-			var y = 50*Math.sin(-t*Math.PI/12)+canvas.height-100*scale;
+			var x = 50*scale*Math.cos(-t*Math.PI/12)+canvas.width/2;
+			var y = 50*scale*Math.sin(-t*Math.PI/12)+canvas.height-100*scale;
 			g.star(x, y, 6*scale, 5, 0.35).fill();
 		}
 		return;
