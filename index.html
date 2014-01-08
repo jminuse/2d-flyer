@@ -133,32 +133,18 @@ var MapObject = (function() {
 	return MapObject;
 })();
 
-var Conditions = (function() {
-	function Conditions() {
-		this.wagons_destroyed = function(game) {
-			return game.map.wagon_count==game.map.wagons_burned_count;
-		}
-		this.enemies_destroyed = function(game) {
-			return game.map.enemy_count==game.map.enemies_destroyed_count;
-		}
-		this.character_dead = function(game) {
-			return game.me.health<=0;
-		}
-	}
-	return Conditions;
-})();
-conditions = new Conditions();
-
 var Map = (function() {
 	function Map(game) {
-		this.loss_condition = conditions.character_dead;
+		this.loss_condition = function(game) { return game.me.health<=0; }
 		if(game.mode==game.SINGLE_GAME) {
 			this.objective_string = 'Objective: burn all supply wagons';
-			this.win_condition = conditions.wagons_destroyed;
+			this.win_condition = function() { return game.map.wagon_count==game.map.wagons_burned_count; }
+			//this.is_goal = 
 		}
 		else {
 			this.objective_string = 'Objective: destroy all enemies';
-			this.win_condition = conditions.enemies_destroyed;
+			this.win_condition = function(game) { return game.map.enemy_count==game.map.enemies_destroyed_count; }
+			//this.is_goal = 
 		}
 		this.width = 2000;
 		this.height = 2000;
