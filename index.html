@@ -147,17 +147,19 @@ var Conditions = (function() {
 	}
 	return Conditions;
 })();
-
 conditions = new Conditions();
 
 var Map = (function() {
 	function Map(game) {
-		this.win_condition = conditions.wagons_destroyed;
 		this.loss_condition = conditions.character_dead;
-		if(game.mode==game.SINGLE_GAME)
+		if(game.mode==game.SINGLE_GAME) {
 			this.objective_string = 'Objective: burn all supply wagons';
-		else
-			this.objective_string = 'Level '+(game.level);
+			this.win_condition = conditions.wagons_destroyed;
+		}
+		else {
+			this.objective_string = 'Objective: destroy all enemies';
+			this.win_condition = conditions.enemies_destroyed;
+		}
 		this.width = 2000;
 		this.height = 2000;
 		this.victory = false;
