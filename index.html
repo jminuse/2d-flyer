@@ -27,8 +27,7 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
   this.closePath();
   return this;
 };
-CanvasRenderingContext2D.prototype.star = function(x, y, r, p, m)
-{
+CanvasRenderingContext2D.prototype.star = function(x, y, r, p, m) {
 	this.save();
 	this.beginPath();
 	this.translate(x, y);
@@ -41,7 +40,32 @@ CanvasRenderingContext2D.prototype.star = function(x, y, r, p, m)
 	}
 	this.restore();
 	return this;
-}
+};
+CanvasRenderingContext2D.prototype.dragon = function(q,s) {
+	g.beginPath();
+	g.moveTo(0,0);
+	g.lineTo(48*s,0-q*48);
+	g.quadraticCurveTo(36*s,15-q*36, 36*s,25-q*36);
+	g.quadraticCurveTo(36*s,15-q*24, 24*s,5-q*24);
+	g.quadraticCurveTo(12*s,15-q*12, 12*s,25-q*12);
+	g.quadraticCurveTo(12*s,15, 0,0);
+	g.lineTo(-48*s,0-q*48);
+	g.quadraticCurveTo(-36*s,15-q*36, -36*s,25-q*36);
+	g.quadraticCurveTo(-36*s,15-q*24, -24*s,5-q*24);
+	g.quadraticCurveTo(-12*s,15-q*12, -12*s,25-q*12);
+	g.quadraticCurveTo(-12*s,15, 0,0);
+	g.bezierCurveTo(10, 20, -10, 30, 0, 50);
+	g.bezierCurveTo(-20, 30, 20, 20, 0, 0);
+	g.lineTo(5,-1);
+	g.lineTo(0,-10);
+	g.lineTo(-5,-1);
+	//g.fillStyle = '#000';
+	var grd=g.createRadialGradient(0,20, 40*s, 0,20, 50*s);
+	grd.addColorStop(0,'#000');
+	grd.addColorStop(1,'#FF0');
+	g.fillStyle=grd;
+	g.fill();
+};
 
 var display_box = document.getElementById('display');
 function display(s, t, color) {
@@ -238,13 +262,13 @@ display_box.style.fontSize = (40*scale)+'px';
 
 var single_game_button=document.getElementById("single-game-button");
 single_game_button.style.right = canvas.offsetLeft+'px';
-single_game_button.style.top = (canvas.height-100*scale)+'px';
+single_game_button.style.top = (canvas.height-60*scale)+'px';
 single_game_button.style.fontSize = 22*scale+'px';
 single_game_button.style.padding = 3*scale+'px';
 single_game_button.style.paddingLeft = 17*scale+'px';
 var campaign_button=document.getElementById("campaign-button");
 campaign_button.style.right = canvas.offsetLeft+'px';
-campaign_button.style.top = (canvas.height-60*scale)+'px';
+campaign_button.style.top = (canvas.height-100*scale)+'px';
 campaign_button.style.fontSize = 22*scale+'px';
 campaign_button.style.padding = 3*scale+'px';
 campaign_button.style.paddingLeft = 17*scale+'px';
@@ -477,13 +501,32 @@ function draw() {
 		g.fillStyle='#FFF';
 		//g.star(canvas.width/2, canvas.height-125*scale, 20*scale, 5, 0.35).fill();
 		for(var t=0; t<13; t++) {
-			var x = 50*scale*Math.cos(-t*Math.PI/12)+canvas.width/2;
-			var y = 50*scale*Math.sin(-t*Math.PI/12)+canvas.height-120*scale;
+			var x = 50*scale*Math.cos((-t*1.4/12+0.2)*Math.PI)+canvas.width/2;
+			var y = 50*scale*Math.sin((-t*1.4/12+0.2)*Math.PI)+canvas.height-140*scale;
 			g.star(x, y, 6*scale, 5, 0.35).fill();
 		}
 		g.fillStyle='#000';
 		g.font=20*scale+'px Times';
 		g.fillText("James Stevenson",canvas.width/2-67*scale, canvas.height-10*scale);
+		
+		/*g.translate(canvas.width/2, canvas.height-140);
+		g.scale(scale, scale);
+		g.beginPath();
+		g.moveTo(-24,20);
+		g.lineTo(28,-40);
+		g.lineTo(12,12);
+		g.fill();*/
+		
+		q=-0.3;
+		s=1;
+		g.save();
+		g.translate(canvas.width/2, canvas.height-160*scale);
+		g.scale(scale, scale);
+		
+		g.dragon(q,s);
+		
+		g.restore();
+		
 		return;
 	}
 	if(map.defeat) {
@@ -660,7 +703,7 @@ function draw() {
 	q *= 0.1;
 	g.save();
 	g.translate(canvas.width/2/scale, canvas.height/scale-50);
-	
+	//flames
 	g.beginPath();
 	g.moveTo(0,-10);
 	g.quadraticCurveTo(0,-me.fire_size*0.5, me.fire_size,-me.fire_size);
@@ -675,33 +718,10 @@ function draw() {
 	g.quadraticCurveTo(0,-me.fire_size*0.5, 0,-10);
 	g.fillStyle = '#FF0';
 	g.fill();
-	
-	g.beginPath();
-	g.moveTo(0,0);
-	g.lineTo(48*s,0-q*48);
-	g.quadraticCurveTo(36*s,15-q*36, 36*s,25-q*36);
-	g.quadraticCurveTo(36*s,15-q*24, 24*s,5-q*24);
-	g.quadraticCurveTo(12*s,15-q*12, 12*s,25-q*12);
-	g.quadraticCurveTo(12*s,15, 0,0);
-	g.lineTo(-48*s,0-q*48);
-	g.quadraticCurveTo(-36*s,15-q*36, -36*s,25-q*36);
-	g.quadraticCurveTo(-36*s,15-q*24, -24*s,5-q*24);
-	g.quadraticCurveTo(-12*s,15-q*12, -12*s,25-q*12);
-	g.quadraticCurveTo(-12*s,15, 0,0);
-	g.bezierCurveTo(10, 20, -10, 30, 0, 50);
-	g.bezierCurveTo(-20, 30, 20, 20, 0, 0);
-	g.lineTo(5,-1);
-	g.lineTo(0,-10);
-	g.lineTo(-5,-1);
-	//g.fillStyle = '#000';
-	var grd=g.createRadialGradient(0,20, 40*s, 0,20, 50*s);
-	grd.addColorStop(0,'#000');
-	grd.addColorStop(1,'#FF0');
-	g.fillStyle=grd;
-	g.fill();
-	g.restore();
-	
+	//dragon
+	g.dragon(q,s);
 	//health bar
+	g.restore();
 	g.fillStyle = '#F00';
 	g.fillRect(5, 5, (canvas.width/scale-5*2)*Math.max(me.health/me.max_health, 0), 5);
 	g.restore();
