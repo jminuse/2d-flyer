@@ -498,29 +498,22 @@ function draw() {
 	
 	if(game.mode==game.NOT_STARTED) {
 		canvas.width = canvas.width;
+		
 		g.fillStyle='#FFF';
-		//g.star(canvas.width/2, canvas.height-125*scale, 20*scale, 5, 0.35).fill();
 		for(var t=0; t<13; t++) {
-			var x = 50*scale*Math.cos((-t*1.4/12+0.2)*Math.PI)+canvas.width/2;
-			var y = 50*scale*Math.sin((-t*1.4/12+0.2)*Math.PI)+canvas.height-140*scale;
+			var x = 60*scale*Math.cos((-t*1.4/12+0.2)*Math.PI)+canvas.width/2;
+			var y = 60*scale*Math.sin((-t*1.4/12+0.2)*Math.PI)+canvas.height-130*scale;
 			g.star(x, y, 6*scale, 5, 0.35).fill();
 		}
+		
 		g.fillStyle='#000';
 		g.font=20*scale+'px Times';
 		g.fillText("James Stevenson",canvas.width/2-67*scale, canvas.height-10*scale);
 		
-		/*g.translate(canvas.width/2, canvas.height-140);
-		g.scale(scale, scale);
-		g.beginPath();
-		g.moveTo(-24,20);
-		g.lineTo(28,-40);
-		g.lineTo(12,12);
-		g.fill();*/
-		
 		q=-0.3;
 		s=1;
 		g.save();
-		g.translate(canvas.width/2, canvas.height-160*scale);
+		g.translate(canvas.width/2, canvas.height-150*scale);
 		g.scale(scale, scale);
 		
 		g.dragon(q,s);
