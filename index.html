@@ -37,7 +37,7 @@ CanvasRenderingContext2D.prototype.star = function(x, y, r, p, m) {
 	}
 	this.restore();
 	return this;
-}; //hi james, i'm just writing some stuff here
+};
 CanvasRenderingContext2D.prototype.dragon = function(q,s) {
 	g.beginPath();
 	g.moveTo(0,0);
@@ -63,6 +63,108 @@ CanvasRenderingContext2D.prototype.dragon = function(q,s) {
 	g.fillStyle=grd;
 	g.fill();
 };
+
+
+
+CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
+	if(o.type==CANNON) {
+		var c = o;
+		g.translate(c.x, c.y);
+		g.rotate(-c.a);
+		var cannon_width = 10;
+		var wheel_width = 5;
+		var wheel_length = 30;
+		var cannon_length = 40;
+		g.fillStyle = c.burned ? '#000' : '#961';
+		g.fillRect(cannon_width/2+3, -wheel_length/2, wheel_width, wheel_length);
+		g.fillRect(-cannon_width/2-wheel_width-3, -wheel_length/2, wheel_width, wheel_length);
+		g.fillRect(-cannon_width/2-3, -5, cannon_width+2*3, 10);
+		g.fillStyle = c.burned ? '#000' : '#444';
+		g.fillRect(-cannon_width/2, -12-wheel_length/2, cannon_width, cannon_length);
+	}
+	else if(o.type==WAGON) {
+		var w = o;
+		g.translate(w.x, w.y);
+		g.rotate(-w.a);
+		g.fillStyle = w.burned ? '#000' : '#851';
+		g.fillRect(-15, -30, 30, 60);
+	
+		g.fillRect(15+1, 5, 3, 20);
+		g.fillRect(-15-3-1, 5, 3, 20);
+	
+		g.fillRect(15+1, -25, 3, 20);
+		g.fillRect(-15-3-1, -25, 3, 20);
+	}
+	else if(o.type==INFANTRY) {
+		var n = o;
+		g.translate(n.x, n.y);
+		g.rotate(-n.a);
+		if(n.cooldown===0.0) { //draw musket
+			g.fillStyle=n.burned ? '#000' : '#777';
+			g.fillRect(1,-24,2,24);
+			g.fillStyle=n.burned ? '#000' : 'brown';
+			g.fillRect(1,-18,2,18);
+		}
+		else { //reload
+			g.fillStyle=n.burned ? '#000' : '#777';
+			g.fillRect(1,-12,2,12);
+			g.fillStyle=n.burned ? '#000' : 'brown';
+			g.fillRect(1,-9,2,9);
+		}
+		g.fillStyle=n.burned ? '#000' : '#F00';
+		g.fillRect(-6,-3,12,6);
+		g.beginPath();
+		g.arc(0, 0, 4, 0, 2*Math.PI);
+		g.fillStyle=n.burned ? '#000' : '#FF5';
+		g.fill();
+	}
+	else if(o.type==CAVALRY) {
+		var c = o;
+		g.translate(c.x, c.y);
+		g.rotate(-c.a);
+		g.fillStyle=c.burned ? '#000' : '#631';
+		//g.fillRect(-6, -18, 6*2, 18*2);
+		g.roundRect(-6, -18, 6*2, 18*2, 4).fill();
+		g.roundRect(-3, -28, 6, 12, 3).fill();
+
+		g.beginPath();
+		g.arc(0, 13, 10, 0.3*Math.PI, 0.7*Math.PI);
+		g.lineTo(0, 13);
+		
+		g.moveTo(0, -27);
+		g.arc(0, -27, 12, 0.35*Math.PI, 0.65*Math.PI);
+		g.lineTo(0, -27);
+		g.fillStyle=c.burned ? '#000' : '#321';
+		g.fill();
+
+		g.fillStyle=c.burned ? '#000' : '#777';
+		g.fillRect(1,-24,2,24);
+		g.fillStyle=c.burned ? '#000' : 'brown';
+		g.fillRect(1,-18,2,18);
+		
+		g.fillStyle=c.burned ? '#000' : '#F00';
+		g.fillRect(-6,-3,12,6);
+		g.beginPath();
+		g.arc(0, 0, 4, 0, 2*Math.PI);
+		g.fillStyle=c.burned ? '#000' : '#FF5';
+		g.fill();
+	}
+	else if(o.type==CANNONBALL || o.type==BULLET) {
+		var p = o;
+		g.beginPath();
+		if(p.type==CANNONBALL) {
+			g.arc(p.x, p.y, 5, 0, 2*Math.PI);
+			g.fillStyle='#222';
+		}
+		else if(p.type==BULLET) {
+			g.arc(p.x, p.y, 2, 0, 2*Math.PI);
+			g.fillStyle='#222';
+		}
+		g.fill();
+	}
+};
+
+
 
 var display_box = document.getElementById('display');
 function display(s, t, color) {
@@ -601,103 +703,8 @@ function draw() {
 		var xxx = cc*xx - ss*yy;
 		var yyy = ss*xx + cc*yy;
 		if( yyy<-480+50-50 || xxx<-340/2-50 || yyy>50+50 || xxx>340/2+50 ) { continue; }
-		
 		g.save();
-		if(o.type==CANNON) {
-			var c = o;
-			g.translate(c.x, c.y);
-			g.rotate(-c.a);
-			var cannon_width = 10;
-			var wheel_width = 5;
-			var wheel_length = 30;
-			var cannon_length = 40;
-			g.fillStyle = c.burned ? '#000' : '#961';
-			g.fillRect(cannon_width/2+3, -wheel_length/2, wheel_width, wheel_length);
-			g.fillRect(-cannon_width/2-wheel_width-3, -wheel_length/2, wheel_width, wheel_length);
-			g.fillRect(-cannon_width/2-3, -5, cannon_width+2*3, 10);
-			g.fillStyle = c.burned ? '#000' : '#444';
-			g.fillRect(-cannon_width/2, -12-wheel_length/2, cannon_width, cannon_length);
-		}
-		else if(o.type==WAGON) {
-			var w = o;
-			g.translate(w.x, w.y);
-			g.rotate(-w.a);
-			g.fillStyle = w.burned ? '#000' : '#851';
-			g.fillRect(-15, -30, 30, 60);
-		
-			g.fillRect(15+1, 5, 3, 20);
-			g.fillRect(-15-3-1, 5, 3, 20);
-		
-			g.fillRect(15+1, -25, 3, 20);
-			g.fillRect(-15-3-1, -25, 3, 20);
-		}
-		else if(o.type==INFANTRY) {
-			var n = o;
-			g.translate(n.x, n.y);
-			g.rotate(-n.a);
-			if(n.cooldown===0.0) { //draw musket
-				g.fillStyle=n.burned ? '#000' : '#777';
-				g.fillRect(1,-24,2,24);
-				g.fillStyle=n.burned ? '#000' : 'brown';
-				g.fillRect(1,-18,2,18);
-			}
-			else { //reload
-				g.fillStyle=n.burned ? '#000' : '#777';
-				g.fillRect(1,-12,2,12);
-				g.fillStyle=n.burned ? '#000' : 'brown';
-				g.fillRect(1,-9,2,9);
-			}
-			g.fillStyle=n.burned ? '#000' : '#F00';
-			g.fillRect(-6,-3,12,6);
-			g.beginPath();
-			g.arc(0, 0, 4, 0, 2*Math.PI);
-			g.fillStyle=n.burned ? '#000' : '#FF5';
-			g.fill();
-		}
-		else if(o.type==CAVALRY) {
-			var c = o;
-			g.translate(c.x, c.y);
-			g.rotate(-c.a);
-			g.fillStyle=c.burned ? '#000' : '#631';
-			//g.fillRect(-6, -18, 6*2, 18*2);
-			g.roundRect(-6, -18, 6*2, 18*2, 4).fill();
-			g.roundRect(-3, -28, 6, 12, 3).fill();
-
-			g.beginPath();
-			g.arc(0, 13, 10, 0.3*Math.PI, 0.7*Math.PI);
-			g.lineTo(0, 13);
-			
-			g.moveTo(0, -27);
-			g.arc(0, -27, 12, 0.35*Math.PI, 0.65*Math.PI);
-			g.lineTo(0, -27);
-			g.fillStyle=c.burned ? '#000' : '#321';
-			g.fill();
-
-			g.fillStyle=c.burned ? '#000' : '#777';
-			g.fillRect(1,-24,2,24);
-			g.fillStyle=c.burned ? '#000' : 'brown';
-			g.fillRect(1,-18,2,18);
-			
-			g.fillStyle=c.burned ? '#000' : '#F00';
-			g.fillRect(-6,-3,12,6);
-			g.beginPath();
-			g.arc(0, 0, 4, 0, 2*Math.PI);
-			g.fillStyle=c.burned ? '#000' : '#FF5';
-			g.fill();
-		}
-		else if(o.type==CANNONBALL || o.type==BULLET) {
-			var p = o;
-			g.beginPath();
-			if(p.type==CANNONBALL) {
-				g.arc(p.x, p.y, 5, 0, 2*Math.PI);
-				g.fillStyle='#222';
-			}
-			else if(p.type==BULLET) {
-				g.arc(p.x, p.y, 2, 0, 2*Math.PI);
-				g.fillStyle='#222';
-			}
-			g.fill();
-		}
+		g.draw_map_object(o);
 		g.restore();
 	}
 
