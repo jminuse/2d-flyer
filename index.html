@@ -160,14 +160,14 @@ var Map = (function() {
 		
 		for(var j=0; j<10; j++) { this.objects.push( new MapObject(CANNONBALL) ); }
 
-		/*for(var x=0; x<this.width; x+=50) {
+		for(var x=0; x<this.width && false; x+=50) {
 			for(var y=0; y<this.height; y+=50) {
 				var w = new MapObject(WAGON,x,y,0);
 				this.objects.push( w );
 				this.enemy_count += 1;
 				this.wagon_count += 1;
 			}
-		}*/
+		}
 
 		for(var k=0; k<10; k++) {
 			do {
@@ -596,15 +596,11 @@ function draw() {
 		var o = map.objects[i];
 		var xx = o.x-me.x;
 		var yy = o.y-me.y;
-		
-		if( xx*xx + yy*yy > look_distance*look_distance ) { continue; }
-		
-		var ss = Math.sin(-me.a-Math.PI/2);
-		var cc = Math.cos(-me.a-Math.PI/2);
+		var ss = me.sin_neg_a;
+		var cc = me.cos_neg_a;
 		var xxx = cc*xx - ss*yy;
 		var yyy = ss*xx + cc*yy;
-		
-		if( xxx<-480+50-50 || yyy<-340/2-50 || xxx>50+50 || yyy>340/2+50 ) { continue; }
+		if( yyy<-480+50-50 || xxx<-340/2-50 || yyy>50+50 || xxx>340/2+50 ) { continue; }
 		
 		g.save();
 		if(o.type==CANNON) {
