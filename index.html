@@ -161,8 +161,16 @@ var Map = (function() {
 		for(var j=0; j<10; j++) { this.objects.push( new MapObject(CANNONBALL) ); }
 
 		for(var k=0; k<10; k++) {
-			var x=Math.random()*this.width;
-			var y=Math.random()*this.height;
+			do {
+				var x=Math.random()*this.width;
+				var y=Math.random()*this.height;
+				var nearest_d2 = 1e6;
+				for(var i=0; i<this.objects.length; i++) {
+					var o = this.objects[i];
+					var d2 = (o.x-x)*(o.x-x) + (o.y-y)*(o.y-y);
+					nearest_d2 = Math.min(nearest_d2, d2);
+				}
+			} while(nearest_d2<150*150);
 		
 			var xx = x+Math.random()*50;
 			var yy = y+Math.random()*50;
