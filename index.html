@@ -64,7 +64,6 @@ CanvasRenderingContext2D.prototype.dragon = function(q,s) {
 	g.fillStyle=grd;
 	g.fill();
 };
-
 CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
 	if(o.type==CANNON) {
 		var c = o;
@@ -162,19 +161,6 @@ CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
 		g.fill();
 	}
 };
-
-
-
-var display_box = document.getElementById('display');
-function display(s, t, color) {
-	if(t===undefined) { t=2000; }
-	if(!color) { color='red'; }
-	display_box.style.color = color;
-	display_box.innerHTML = s;
-	display_box.style.display = 'block';
-	if(t) { setTimeout("display_box.style.display='none';", t); }
-}
-
 var Player = (function() {
 	function Player() {
 		this.a = Math.PI/2;
@@ -343,21 +329,31 @@ var Game = (function() {
 		this.NOT_STARTED = 0; this.SINGLE_GAME = 1; this.CAMPAIGN = 2;
 		this.level = 0;
 		this.mode = this.NOT_STARTED;
-		display("<div style='font-size:200%; margin-top:-0.5em;'>The Republic's Dragon</div>", false, 'black');
-		
+		this.display_box = document.getElementById('display');
+		this.display = function(s, t, color) {
+			if(t===undefined) { t=2000; }
+			if(!color) { color='red'; }
+			this.display_box.style.color = color;
+			this.display_box.innerHTML = s;
+			this.display_box.style.display = 'block';
+			if(t) { setTimeout("game.display_box.style.display='none';", t); }
+		}
 		this.canvas=document.getElementById("myCanvas");
 		this.canvas.height = window.innerHeight;
 		this.canvas.width = this.canvas.height * 340/480;
 		this.canvas.style.marginLeft = (-this.canvas.width/2)+'px';
-		display_box.style.width = this.canvas.width+'px';
-		display_box.style.marginLeft = this.canvas.style.marginLeft;
+		this.display_box.style.width = this.canvas.width+'px';
+		this.display_box.style.marginLeft = this.canvas.style.marginLeft;
 		this.scale = this.canvas.height/480;
-		display_box.style.fontSize = (40*this.scale)+'px';
+		this.display_box.style.fontSize = (40*this.scale)+'px';
+		this.display("<div style='font-size:150%;'>The Republic's Dragon</div>", false, 'black');
 
 		var single_game_button=document.getElementById("single-game-button");
+		single_game_button.style.display = 'block';
 		single_game_button.style.top = (this.canvas.height-60*this.scale)+'px';
 
 		var campaign_button=document.getElementById("campaign-button");
+		campaign_button.style.display = 'block';
 		campaign_button.style.top = (this.canvas.height-100*this.scale)+'px';
 
 		var head = document.getElementsByTagName('head')[0];
@@ -370,6 +366,7 @@ var Game = (function() {
 
 		this.look_distance = 480;
 		this.g=this.canvas.getContext("2d");
+		g = this.g;
 
 		info = document.getElementById('info');
 		single_game_button.onmousedown = function(e) {
@@ -391,7 +388,7 @@ var Game = (function() {
 		}
 		this.map = new Map(this);
 		this.me = new Player();
-		display(this.map.objective_string, 3000);
+		this.display(this.map.objective_string, 3000);
 		map = this.map;
 		me = this.me;
 	};
@@ -399,7 +396,6 @@ var Game = (function() {
 })();
 
 var game = new Game();
-g = game.g;
 
 keys = [];
 for(var i=0; i<256; i++) {
@@ -612,22 +608,22 @@ Game.prototype.logic = function(dt) {
 	}
 	if(map.loss_condition(game)) {
 		map.defeat = true;
-		display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', false);
+		game.display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', false);
 		if('ontouchend' in document) {
-			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; game.next_level(); };
+			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; /*game.next_level();*/ game = new Game(); };
 		}
 		else {
-			document.onmouseup = function() { document.onmouseup=null; game.next_level(); };
+			document.onmouseup = function() { document.onmouseup=null; /*game.next_level();*/ game = new Game(); };
 		}
 	}
 	if(map.win_condition(game)) {
 		map.victory = true;
-		display('Victory!<br><small>Click to continue</small>', false, 'blue');
+		game.display('Victory!<br><small>Click to continue</small>', false, 'blue');
 		if('ontouchend' in document) {
-			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; game.next_level(); };
+			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; /*game.next_level();*/ game=new Game(); };
 		}
 		else {
-			document.onmouseup = function() { document.onmouseup=null; game.next_level(); };
+			document.onmouseup = function() { document.onmouseup=null; /*game.next_level();*/ game=new Game(); };
 		}
 	}
 	return nearest_goal;
@@ -646,7 +642,7 @@ Game.prototype.draw = function() {
 		g.fillStyle='#FFF';
 		for(var t=0; t<13; t++) {
 			var x = 60*game.scale*Math.cos((-t*1.4/12+0.2)*Math.PI)+game.canvas.width/2;
-			var y = 60*game.scale*Math.sin((-t*1.4/12+0.2)*Math.PI)+game.canvas.height-130*game.scale;
+			var y = 60*game.scale*Math.sin((-t*1.4/12+0.2)*Math.PI)+game.canvas.height-150*game.scale;
 			g.star(x, y, 6*game.scale, 5, 0.35).fill();
 		}
 		g.fillStyle='#000';
@@ -655,7 +651,7 @@ Game.prototype.draw = function() {
 		q=-0.3;
 		s=1;
 		g.save();
-		g.translate(game.canvas.width/2, game.canvas.height-150*game.scale);
+		g.translate(game.canvas.width/2, game.canvas.height-170*game.scale);
 		g.scale(game.scale, game.scale);
 		g.dragon(q,s);
 		g.restore();
