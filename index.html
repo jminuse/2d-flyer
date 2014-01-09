@@ -209,9 +209,9 @@ var Player = (function() {
 	return Player;
 })();
 
-NONE = 0; BULLET = 1; CANNONBALL = 2;
+BULLET = 1; CANNONBALL = 2;
 CANNON = 3; WAGON = 4; INFANTRY = 5;
-CAVALRY = 6; PROJECTILES = 7;
+CAVALRY = 6;
 
 var MapObject = (function() {
 	function MapObject(type,x,y,a,guarding,burned,cooldown) {
@@ -231,6 +231,30 @@ var MapObject = (function() {
 	}
 	return MapObject;
 })();
+
+function Cannon(x,y,a,guarding,burned,cooldown) {
+	var that = MapObject(x,y,a,guarding,burned,cooldown);
+	that.da = 0.0002; that.guarding_distance=100;
+	return that;
+}
+function Cavalry(x,y,a,guarding,burned,cooldown) {
+	var that = MapObject(x,y,a,guarding,burned,cooldown);
+	that.v = 0.06; that.da = 0.002; that.guarding_distance=200;
+	return that;
+}
+function Infantry(x,y,a,guarding,burned,cooldown) {
+	var that = MapObject(x,y,a,guarding,burned,cooldown);
+	that.v = 0.02; that.da = 0.002; that.guarding_distance=100;
+	return that;
+}
+function Bullet(x,y,a,guarding,burned,cooldown) {
+	var that = MapObject(x,y,a,guarding,burned,cooldown);
+	return that;
+}
+function Cannonball(x,y,a,guarding,burned,cooldown) {
+	var that = MapObject(x,y,a,guarding,burned,cooldown);
+	return that;
+}
 
 var Map = (function() {
 	function Map(game) {
