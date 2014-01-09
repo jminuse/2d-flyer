@@ -241,6 +241,7 @@ function Cannonball(x,y,a,guarding,burned,cooldown) {
 }
 var Map = (function() {
 	function Map(game) {
+		this.NOT_STARTED=0; this.PLAYING=1; this.VICTORY=2; this.DEFEAT=3;
 		this.loss_condition = function(game) { return game.me.health<=0; }
 		if(game.mode==game.SINGLE_GAME) {
 			this.objective_string = 'Objective: burn all supply wagons';
@@ -254,8 +255,7 @@ var Map = (function() {
 		}
 		this.width = 2000;
 		this.height = 2000;
-		this.victory = false;
-		this.defeat = false;
+		this.state = this.PLAYING;
 		this.objects = [];
 		this.wagon_count = 0;
 		this.wagons_burned_count = 0;
@@ -605,7 +605,7 @@ Game.prototype.logic = function(dt) {
 		}
 	}
 	if(map.loss_condition(game)) {
-		map.defeat = true;
+		map.state = map.DEFEAT;
 		game.display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', false);
 		if('ontouchend' in document) {
 			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; /*game.next_level();*/ game = new Game(); };
@@ -615,7 +615,7 @@ Game.prototype.logic = function(dt) {
 		}
 	}
 	if(map.win_condition(game)) {
-		map.victory = true;
+		map.state = map.VICTORY;
 		game.display('Victory!<br><small>Click to continue</small>', false, 'blue');
 		if('ontouchend' in document) {
 			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; /*game.next_level();*/ game=new Game(); };
@@ -654,10 +654,10 @@ Game.prototype.draw = function() {
 		g.restore();
 		return;
 	}
-	if(map.defeat) {
+	if(map.state==map.DEFEAT) {
 		return;
 	}
-	if(map.victory) {
+	if(map.state==map.VICTORY) {
 		return;
 	}
 	
