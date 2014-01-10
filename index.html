@@ -257,6 +257,10 @@ function Cannonball(x,y,a,guarding,burned,cooldown) {
 var Point = function(x,y) {
 	this.x = x; this.y = y;
 }
+var TopoCurve = function(r) {
+	this.r = r;
+	this.points = [];
+}
 var Map = (function() {
 	function Map(game) {
 		map = this;
@@ -292,7 +296,7 @@ var Map = (function() {
 			var min_hill_size = 30;
 			var hill_size = 200+Math.random()*200;
 			for(var r=min_hill_size; r<hill_size; r=1.2*r + 50) {
-				var list = [];
+				var curve = new TopoCurve(r);
 				var old = null;
 				var intersects = false;
 				for(var theta=0; theta<2*Math.PI && !intersects; theta+=2*Math.PI/(Math.sqrt(r/min_hill_size)*8)) {
@@ -302,45 +306,44 @@ var Map = (function() {
 					var point = new Point(xx,yy);
 					
 					if(old) { //misses one line, from last back to first
-						for(var tt=0; tt<map.topo.length && !intersects; tt++) {
-							var other_list = map.topo[tt];
-							for(var u=0; u<other_list.length && !intersects; u++) {
-								var a = other_list[u];
-								var b = other_list[u+1];
-								if(u+1==other_list.length) { b = other_list[0]; }
+						for(var tt=0; tt<map.topo.length-1 && !intersects; tt++) {
+							var other_curve = map.topo[tt];
+							for(var u=0; u<other_curve.points.length && !intersects; u++) {
+								var a = other_curve.points[u];
+								var b = other_curve.points[u+1];
+								if(u+1==other_curve.points.length) { b = other_curve.points[0]; }
 							
 								if( line_intersects(a,b,old,point) ) intersects = true;
 							}
 						}
 						if(intersects) continue;
 					}
-					
-					list.push(point);
+					curve.points.push(point);
 					old = point;
 				}
-				if(!intersects) this.topo.push(list);
+				if(!intersects) this.topo.push(curve);
 			}
 		}
 		
 		for(var step=0; step<2; step++)
-		for(var t=0; t<map.topo.length; t++) {
-			var list = map.topo[t];
-			for(var v=0; v<list.length; v++) {
-				var p = list[v];
-				var q = list[v+1];
-				if(v+1==list.length) { q = list[0]; }
+		for(var t=map.topo.length-1; t>=0; t--) {
+			var curve = map.topo[t];
+			for(var v=0; v<curve.points.length; v++) {
+				var p = curve.points[v];
+				var q = curve.points[v+1];
+				if(v+1==curve.points.length) { q = curve.points[0]; }
 			
-				var range = 10;
+				var range = 1.5*Math.sqrt(curve.r);
 				var old_x = p.x + (range-Math.random()*range*2);
 				var old_y = p.y + (range-Math.random()*range*2);
 				
 				var intersects = 0;
 				for(var tt=0; tt<map.topo.length && !intersects; tt++) {
-					var other_list = map.topo[tt];
-					for(var u=0; u<other_list.length && !intersects; u++) {
-						var a = other_list[u];
-						var b = other_list[u+1];
-						if(u+1==other_list.length) { b = other_list[0]; }
+					var other_curve = map.topo[tt];
+					for(var u=0; u<other_curve.points.length && !intersects; u++) {
+						var a = other_curve.points[u];
+						var b = other_curve.points[u+1];
+						if(u+1==other_curve.points.length) { b = other_curve.points[0]; }
 				
 						if( line_intersects(a,b,p,q) ) intersects = true;
 					}
@@ -803,16 +806,16 @@ Game.prototype.draw = function() {
 	g.stroke();
 	
 	g.strokeStyle = "#000";
-	for(var t=0; t<map.topo.length; t++) {
-		var list = map.topo[t];
+	for(var t=map.topo.length-1; t>=0; t--) {
+		var curve = map.topo[t];
 		g.beginPath();
-		for(var u=0; u<list.length; u++) {
-			var p = list[u];
+		for(var u=0; u<curve.points.length; u++) {
+			var p = curve.points[u];
 			g.lineTo(p.x, p.y);
 		}
-		g.lineTo(list[0].x, list[0].y);
-		//g.fillStyle = 'rgb()';
-		//g.fill();
+		g.lineTo(curve.points[0].x, curve.points[0].y);
+		g.fillStyle = 'rgba(0,255,0,'+(curve.r/400)+')';
+		g.fill();
 		g.stroke();
 	}
 	
