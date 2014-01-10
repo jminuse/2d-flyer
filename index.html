@@ -10,8 +10,8 @@
 	<canvas id="myCanvas" style="display:block; position:absolute; top:0px; left:50%; background:#0A1;"></canvas>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
 	<div style='position:absolute; top:1em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
-	<div class='bookmark' id='single-game-button'>Single game</div>
 	<div class='bookmark' id='campaign-button'>Campaign</div>
+	<div class='bookmark' id='single-game-button'>Single game</div>
 <script>
 CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
   if (w < 2 * r) { r = w / 2; }
@@ -346,13 +346,13 @@ var Game = (function() {
 		this.display_box.style.fontSize = (40*this.scale)+'px';
 		this.display("<div style='font-size:150%;'>The Republic's Dragon</div>", false, 'black');
 
-		var single_game_button=document.getElementById("single-game-button");
-		single_game_button.style.display = 'block';
-		single_game_button.style.top = (this.canvas.height-60*this.scale)+'px';
+		this.single_game_button=document.getElementById("single-game-button");
+		this.single_game_button.style.display = 'block';
+		this.single_game_button.style.top = (this.canvas.height-60*this.scale)+'px';
 
-		var campaign_button=document.getElementById("campaign-button");
-		campaign_button.style.display = 'block';
-		campaign_button.style.top = (this.canvas.height-100*this.scale)+'px';
+		this.campaign_button=document.getElementById("campaign-button");
+		this.campaign_button.style.display = 'block';
+		this.campaign_button.style.top = (this.canvas.height-100*this.scale)+'px';
 
 		var head = document.getElementsByTagName('head')[0];
 		var style = document.createElement('style');
@@ -367,16 +367,16 @@ var Game = (function() {
 		g = this.g;
 
 		info = document.getElementById('info');
-		single_game_button.onmousedown = function(e) {
+		this.single_game_button.onmousedown = function(e) {
 			game.mode=game.SINGLE_GAME;
-			single_game_button.style.display='none';
-			campaign_button.style.display='none';
+			game.single_game_button.style.display='none';
+			game.campaign_button.style.display='none';
 			game.next_level();
 		}
-		campaign_button.onmousedown = function(e) {
+		this.campaign_button.onmousedown = function(e) {
 			game.mode=game.CAMPAIGN;
-			single_game_button.style.display='none';
-			campaign_button.style.display='none';
+			game.single_game_button.style.display='none';
+			game.campaign_button.style.display='none';
 			game.next_level();
 		}
 	}
@@ -606,23 +606,15 @@ Game.prototype.logic = function(dt) {
 	}
 	if(map.loss_condition(game)) {
 		map.state = map.DEFEAT;
-		game.display('We are defeated!<br>Pull back!<br><small>Click to continue</small>', false);
-		if('ontouchend' in document) {
-			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; /*game.next_level();*/ game = new Game(); };
-		}
-		else {
-			document.onmouseup = function() { document.onmouseup=null; /*game.next_level();*/ game = new Game(); };
-		}
+		game.display('We are defeated!<br>Pull back!', false);
+		game.single_game_button.style.display='block';
+		game.campaign_button.style.display='block';
 	}
 	if(map.win_condition(game)) {
 		map.state = map.VICTORY;
-		game.display('Victory!<br><small>Click to continue</small>', false, 'blue');
-		if('ontouchend' in document) {
-			document.ontouchend = function() { document.ontouchend = function(e) { touchscreen_touched=false; }; /*game.next_level();*/ game=new Game(); };
-		}
-		else {
-			document.onmouseup = function() { document.onmouseup=null; /*game.next_level();*/ game=new Game(); };
-		}
+		game.display('Victory!', false, 'blue');
+		game.single_game_button.style.display='block';
+		game.campaign_button.style.display='block';
 	}
 	return nearest_goal;
 }
