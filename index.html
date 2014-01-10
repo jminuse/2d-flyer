@@ -291,9 +291,9 @@ var Map = (function() {
 		this.topo = [];
 		this.hills = [];
 		
-		for(var t=0; t<100; t++) {
-			var x=Math.random()*this.width;
-			var y=Math.random()*this.height;
+		for(var t=0; t<(this.width+640*2)*(this.height+640*2)*0.00002; t++) {
+			var x=Math.random()*(this.width+640*2);
+			var y=Math.random()*(this.height+640*2);
 			var hill_added = false;
 			var hill = new Point(x,y);
 			var min_hill_size = 50;
@@ -305,7 +305,7 @@ var Map = (function() {
 				for(var theta=0; theta<2*Math.PI && !intersects; theta+=2*Math.PI/(Math.sqrt(r/min_hill_size)*8)) {
 					var xx = x+Math.cos(theta)*r;
 					var yy = y+Math.sin(theta)*r;
-					if(xx<0 || xx>this.width || yy<0 || yy>this.height) { intersects=true; }
+					if(xx<-640 || xx>this.width+640 || yy<-640 || yy>this.height+640) { intersects=true; }
 					var point = new Point(xx,yy);
 					
 					if(old) { //misses one line, from last back to first
@@ -383,6 +383,7 @@ var Map = (function() {
 			do {
 				var hill = this.hills[h];
 				var x = hill.x; var y = hill.y;
+				if(x<0 || x>this.width || y<0 || y>this.height) { h++; continue; }
 				//var x=Math.random()*this.width;
 				//var y=Math.random()*this.height;
 				var nearest_d2 = 1e6;
@@ -392,7 +393,7 @@ var Map = (function() {
 					nearest_d2 = Math.min(nearest_d2, d2);
 				}
 				h++;
-			} while(nearest_d2<150*150);
+			} while(nearest_d2<150*150 || x<0 || x>this.width || y<0 || y>this.height);
 		
 			var xx = x; var yy = y;
 			var w = new MapObject(WAGON,xx,yy,Math.random()*2*Math.PI);
