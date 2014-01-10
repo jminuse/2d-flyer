@@ -289,11 +289,14 @@ var Map = (function() {
 		this.enemy_count=0;
 		this.enemies_destroyed_count=0;
 		this.topo = [];
+		this.hills = [];
 		
 		for(var t=0; t<100; t++) {
 			var x=Math.random()*this.width;
 			var y=Math.random()*this.height;
-			var min_hill_size = 30;
+			var hill_added = false;
+			var hill = new Point(x,y);
+			var min_hill_size = 50;
 			var hill_size = 200+Math.random()*200;
 			for(var r=min_hill_size; r<hill_size; r=1.2*r + 50) {
 				var curve = new TopoCurve(r);
@@ -321,11 +324,15 @@ var Map = (function() {
 					curve.points.push(point);
 					old = point;
 				}
-				if(!intersects) this.topo.push(curve);
+				if(!intersects) {
+					this.topo.push(curve);
+					if(!hill_added) {this.hills.push( hill ); hill_added=true; hill.height=0; }
+					else { hill.height++; }
+				}
 			}
 		}
 		
-		for(var step=0; step<2; step++)
+		//for(var step=0; step<2; step++)
 		for(var t=map.topo.length-1; t>=0; t--) {
 			var curve = map.topo[t];
 			for(var v=0; v<curve.points.length; v++) {
@@ -369,20 +376,25 @@ var Map = (function() {
 			}
 		}
 
+		this.hills.sort( function(a,b) {return b.height-a.height;} );
+
 		for(var k=0; k<10; k++) {
+			var h = k;
 			do {
-				var x=Math.random()*this.width;
-				var y=Math.random()*this.height;
+				var hill = this.hills[h];
+				var x = hill.x; var y = hill.y;
+				//var x=Math.random()*this.width;
+				//var y=Math.random()*this.height;
 				var nearest_d2 = 1e6;
 				for(var i=0; i<this.objects.length; i++) {
 					var o = this.objects[i];
 					var d2 = (o.x-x)*(o.x-x) + (o.y-y)*(o.y-y);
 					nearest_d2 = Math.min(nearest_d2, d2);
 				}
+				h++;
 			} while(nearest_d2<150*150);
 		
-			var xx = x+Math.random()*50;
-			var yy = y+Math.random()*50;
+			var xx = x; var yy = y;
 			var w = new MapObject(WAGON,xx,yy,Math.random()*2*Math.PI);
 			this.objects.push( w );
 			this.enemy_count += 1;
