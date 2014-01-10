@@ -246,7 +246,7 @@ var Map = (function() {
 		this.NOT_STARTED=0; this.PLAYING=1; this.VICTORY=2; this.DEFEAT=3;
 		this.loss_condition = function(game) { return game.me.health<=0; }
 		if(game.mode==game.SINGLE_GAME) {
-			game.init_level[game.level]();
+			game.init_destroy_wagons();
 			this.state = this.PLAYING;
 		}
 		else {
