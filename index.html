@@ -13,6 +13,18 @@
 	<div class='bookmark' id='campaign-button'>Campaign</div>
 	<div class='bookmark' id='single-game-button'>Single game</div>
 <script>
+function line_intersects(p0, p1, p2, p3) {
+	var s1_x = p1.x - p0.x;     var s1_y = p1.y - p0.y;
+	var s2_x = p3.x - p2.x;     var s2_y = p3.y - p2.y;
+	var s = (-s1_y * (p0.x - p2.x) + s1_x * (p0.y - p2.y)) / (-s2_x * s1_y + s1_x * s2_y);
+	var t = ( s2_x * (p0.y - p2.y) - s2_y * (p0.x - p2.x)) / (-s2_x * s1_y + s1_x * s2_y);
+	if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+		var i_x = p0.x + (t * s1_x);
+		var i_y = p0.y + (t * s1_y);
+		return true;
+	}
+	return false;
+}
 CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
   if (w < 2 * r) { r = w / 2; }
   if (h < 2 * r) { r = h / 2; }
@@ -242,6 +254,9 @@ function Cannonball(x,y,a,guarding,burned,cooldown) {
 	return that;
 }
 */
+var Point = function(x,y) {
+	this.x = x; this.y = y;
+}
 var Map = (function() {
 	function Map(game) {
 		map = this;
@@ -271,16 +286,68 @@ var Map = (function() {
 		this.enemies_destroyed_count=0;
 		this.topo = [];
 		
-		for(var t=0; t<10; t++) {
+		for(var t=0; t<100; t++) {
 			var x=Math.random()*this.width;
 			var y=Math.random()*this.height;
-			for(var theta=0; theta<2*Math.PI; theta+=2*Math.PI/10) {
-				var r = 50;
-				var xx = x+Math.cos(theta)*r;
-				var yy = y+Math.sin(theta)*r;
-				if(xx<0 || xx>this.width || yy<0 || yy>this.height) { continue; }
-				topo.push(xx);
-				topo.push(yy);
+			var min_hill_size = 30;
+			var hill_size = 200+Math.random()*200;
+			for(var r=min_hill_size; r<hill_size; r=1.2*r + 50) {
+				var list = [];
+				var old = null;
+				var intersects = false;
+				for(var theta=0; theta<2*Math.PI && !intersects; theta+=2*Math.PI/(Math.sqrt(r/min_hill_size)*8)) {
+					var xx = x+Math.cos(theta)*r;
+					var yy = y+Math.sin(theta)*r;
+					if(xx<0 || xx>this.width || yy<0 || yy>this.height) { intersects=true; }
+					var point = new Point(xx,yy);
+					
+					if(old) { //misses one line, from last back to first
+						for(var tt=0; tt<map.topo.length && !intersects; tt++) {
+							var other_list = map.topo[tt];
+							for(var u=0; u<other_list.length && !intersects; u++) {
+								var a = other_list[u];
+								var b = other_list[u+1];
+								if(u+1==other_list.length) { b = other_list[0]; }
+							
+								if( line_intersects(a,b,old,point) ) intersects = true;
+							}
+						}
+						if(intersects) continue;
+					}
+					
+					list.push(point);
+					old = point;
+				}
+				if(!intersects) this.topo.push(list);
+			}
+		}
+		
+		for(var step=0; step<2; step++)
+		for(var t=0; t<map.topo.length; t++) {
+			var list = map.topo[t];
+			for(var v=0; v<list.length; v++) {
+				var p = list[v];
+				var q = list[v+1];
+				if(v+1==list.length) { q = list[0]; }
+			
+				var range = 10;
+				var old_x = p.x + (range-Math.random()*range*2);
+				var old_y = p.y + (range-Math.random()*range*2);
+				
+				var intersects = 0;
+				for(var tt=0; tt<map.topo.length && !intersects; tt++) {
+					var other_list = map.topo[tt];
+					for(var u=0; u<other_list.length && !intersects; u++) {
+						var a = other_list[u];
+						var b = other_list[u+1];
+						if(u+1==other_list.length) { b = other_list[0]; }
+				
+						if( line_intersects(a,b,p,q) ) intersects = true;
+					}
+				}
+				if(intersects) {
+					p.x = old_x; p.y = old_y;
+				}
 			}
 		}
 		
@@ -710,7 +777,8 @@ Game.prototype.draw = function() {
 	g.translate(-game.canvas.width/2/game.scale, -game.canvas.height/game.scale+50);
 	g.translate(-me.x+game.canvas.width/2/game.scale, -me.y+game.canvas.height/game.scale-50);
 	
-	g.beginPath();
+	/*
+	g.beginPath(); //grid lines
 	for (var x=0; x<map.width+1; x+=50) {
 		g.moveTo(x, 0);
 		g.lineTo(x, map.height);
@@ -721,6 +789,32 @@ Game.prototype.draw = function() {
 	}
 	g.strokeStyle = "#00A";
 	g.stroke();
+	*/
+	g.beginPath(); //grid lines
+	for (var x=0; x<map.width+1; x+=map.width) {
+		g.moveTo(x, 0);
+		g.lineTo(x, map.height);
+	}
+	for(var y=0; y<map.height+1; y+=map.height) {
+		g.moveTo(0, y);
+		g.lineTo(map.width, y);
+	}
+	g.strokeStyle = "#00A";
+	g.stroke();
+	
+	g.strokeStyle = "#000";
+	for(var t=0; t<map.topo.length; t++) {
+		var list = map.topo[t];
+		g.beginPath();
+		for(var u=0; u<list.length; u++) {
+			var p = list[u];
+			g.lineTo(p.x, p.y);
+		}
+		g.lineTo(list[0].x, list[0].y);
+		//g.fillStyle = 'rgb()';
+		//g.fill();
+		g.stroke();
+	}
 	
 	for(var i=0; i<map.objects.length; i++) {
 		var o = map.objects[i];
