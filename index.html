@@ -356,7 +356,7 @@ var Game = (function() {
 
 		var head = document.getElementsByTagName('head')[0];
 		var style = document.createElement('style');
-		var rules = document.createTextNode(".bookmark{position:absolute;background-color:#27F; color:black; cursor:pointer;right:"+this.canvas.offsetLeft+"px;font-size:"+(22*this.scale)+"px;padding:"+(3*this.scale)+"px;padding-left:"+(17*this.scale)+"px;}\n.bookmark:after{content:'';display:block;border:"+(15*this.scale)+"px solid transparent;border-left-color:#0A1;position:absolute;left:0;bottom:0;}");
+		var rules = document.createTextNode(".bookmark{position:absolute; background-color:#27F; color:black; cursor:pointer; height:"+(26*this.scale)+"px; right:"+(this.canvas.offsetLeft-1)+"px;font-size:"+(22*this.scale)+"px;padding:"+(3*this.scale)+"px;padding-left:"+(18*this.scale)+"px;}\n.bookmark:after{content:'';display:block;border:"+(16*this.scale)+"px solid transparent;border-left-color:#0A1;position:absolute;left:0;bottom:0;}");
 		style.type = 'text/css';
 		if(style.styleSheet) { style.styleSheet.cssText = rules.nodeValue; }
 		else { style.appendChild(rules); }
