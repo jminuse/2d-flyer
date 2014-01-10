@@ -522,10 +522,8 @@ Game.prototype.logic = function(dt) {
 				p.x = -1000.0; p.y = -1000.0;
 			}
 			else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
-				var kinetic_energy = (p.dx-me.dx)*(p.dx-me.dx) + (p.dy-me.dy)*(p.dy-me.dy);
-				var damage = Math.min(30, 5*((50.0*kinetic_energy)|0) );
+				var damage = 30;
 				if(p.type==BULLET) { damage = 1; }
-				if(damage===0) { continue; }
 				p.x = -1000.0; p.y = -1000.0;
 				me.health -= damage;
 			}
