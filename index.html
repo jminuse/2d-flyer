@@ -331,13 +331,17 @@ var Map = (function() {
 			for(var v=0; v<curve.points.length; v++) {
 				var p = curve.points[v];
 				var q = curve.points[v+1];
+				var r = curve.points[v+2];
 				if(v+1==curve.points.length) { q = curve.points[0]; }
+				if(v+2>curve.points.length-1) { r = curve.points[v+2-curve.points.length]; }
 			
+				var old_x = q.x;
+				var old_y = q.y;
 				var range = 1.5*Math.sqrt(curve.r);
-				var old_x = p.x + (range-Math.random()*range*2);
-				var old_y = p.y + (range-Math.random()*range*2);
+				q.x += (range-Math.random()*range*2);
+				q.y += (range-Math.random()*range*2);
 				
-				var intersects = 0;
+				/*var intersects = false;
 				for(var tt=0; tt<map.topo.length && !intersects; tt++) {
 					var other_curve = map.topo[tt];
 					for(var u=0; u<other_curve.points.length && !intersects; u++) {
@@ -345,12 +349,12 @@ var Map = (function() {
 						var b = other_curve.points[u+1];
 						if(u+1==other_curve.points.length) { b = other_curve.points[0]; }
 				
-						if( line_intersects(a,b,p,q) ) intersects = true;
+						if( line_intersects(a,b,p,q) || line_intersects(a,b,q,r) ) intersects = true;
 					}
 				}
 				if(intersects) {
-					p.x = old_x; p.y = old_y;
-				}
+					q.x = old_x; q.y = old_y;
+				}*/
 			}
 		}
 		
@@ -806,6 +810,7 @@ Game.prototype.draw = function() {
 	g.stroke();
 	
 	g.strokeStyle = "#000";
+	g.fillStyle = 'rgba(0,255,0,0.15)';
 	for(var t=map.topo.length-1; t>=0; t--) {
 		var curve = map.topo[t];
 		g.beginPath();
@@ -814,9 +819,9 @@ Game.prototype.draw = function() {
 			g.lineTo(p.x, p.y);
 		}
 		g.lineTo(curve.points[0].x, curve.points[0].y);
-		g.fillStyle = 'rgba(0,255,0,'+(curve.r/400)+')';
+		//g.fillStyle = 'rgba(0,255,0,'+(curve.r/400)+')';
 		g.fill();
-		g.stroke();
+		//g.stroke();
 	}
 	
 	for(var i=0; i<map.objects.length; i++) {
