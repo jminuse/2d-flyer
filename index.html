@@ -269,6 +269,20 @@ var Map = (function() {
 		this.wagons_burned_count = 0;
 		this.enemy_count=0;
 		this.enemies_destroyed_count=0;
+		this.topo = [];
+		
+		for(var t=0; t<10; t++) {
+			var x=Math.random()*this.width;
+			var y=Math.random()*this.height;
+			for(var theta=0; theta<2*Math.PI; theta+=2*Math.PI/10) {
+				var r = 50;
+				var xx = x+Math.cos(theta)*r;
+				var yy = y+Math.sin(theta)*r;
+				if(xx<0 || xx>this.width || yy<0 || yy>this.height) { continue; }
+				topo.push(xx);
+				topo.push(yy);
+			}
+		}
 		
 		for(var j=0; j<10; j++) { this.objects.push( new MapObject(CANNONBALL) ); }
 
