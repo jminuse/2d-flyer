@@ -9,7 +9,7 @@
 <body style="background-color:black; color:#AAA; overflow:hidden;">
 	<canvas id="myCanvas" style="display:block; position:absolute; top:0px; left:50%; background:#0A1;"></canvas>
 	<div style='position:absolute; top:1em; left:1em;' id='info'></div>
-	<div style='position:absolute; top:1em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
+	<div style='position:absolute; top:0em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
 	<div class='bookmark' id='campaign-button'>Campaign</div>
 	<div class='bookmark' id='single-game-button'>Single game</div>
 <script>
@@ -244,18 +244,26 @@ var Map = (function() {
 		this.NOT_STARTED=0; this.PLAYING=1; this.VICTORY=2; this.DEFEAT=3;
 		this.loss_condition = function(game) { return game.me.health<=0; }
 		if(game.mode==game.SINGLE_GAME) {
-			this.objective_string = 'Objective: burn all supply wagons';
+			game.display('Objective: burn all supply wagons', 3000);
 			this.win_condition = function() { return game.map.wagon_count==game.map.wagons_burned_count; }
 			this.is_goal = function(obj) { return !obj.burned && obj.type==WAGON; }
+			this.state = this.PLAYING;
 		}
 		else {
-			this.objective_string = 'Objective: destroy all enemies';
-			this.win_condition = function(game) { return game.map.enemy_count==game.map.enemies_destroyed_count; }
-			this.is_goal = function(obj) { return !obj.burned && obj.type!=BULLET && obj.type!=CANNONBALL; }
+			game.display_box.style.background='#DDD';
+			game.display('<div>'+game.level_text[game.level]+'</div>', false);
+			game.canvas.onmousedown = function(e) {
+				game.canvas.onmousedown = null;
+				game.display('Objective: terrify the enemy');
+				map.state = map.PLAYING;
+				game.display_box.style.background='none';
+				map.win_condition = function(game) { return game.map.enemies_destroyed_count>0; }
+				map.is_goal = function(obj) { return !obj.burned && obj.type!=BULLET && obj.type!=CANNONBALL; }
+			}
+			this.state = this.SPLASH;
 		}
 		this.width = 2000;
 		this.height = 2000;
-		this.state = this.PLAYING;
 		this.objects = [];
 		this.wagon_count = 0;
 		this.wagons_burned_count = 0;
@@ -325,6 +333,7 @@ var Game = (function() {
 	function Game() {
 		this.NOT_STARTED = 0; this.SINGLE_GAME = 1; this.CAMPAIGN = 2;
 		this.level = 0;
+		this.level_text = ['Boston Mobs', 'Lexington Common', 'Green Mountain Boys', 'Evacuation of Boston', 'New York City', 'The Battle of Brooklyn', 'Setauket By Night', 'Princeton University', 'Saratoga', 'Charleston', 'Yorktown'];
 		this.mode = this.NOT_STARTED;
 		this.display_box = document.getElementById('display');
 		this.display = function(s, t, color) {
@@ -341,10 +350,11 @@ var Game = (function() {
 		this.canvas.width = this.canvas.height * 340/480;
 		this.canvas.style.marginLeft = (-this.canvas.width/2)+'px';
 		this.display_box.style.width = this.canvas.width+'px';
+		this.display_box.style.height = this.canvas.height+'px';
 		this.display_box.style.marginLeft = this.canvas.style.marginLeft;
 		this.scale = this.canvas.height/480;
 		this.display_box.style.fontSize = (40*this.scale)+'px';
-		this.display("<div style='font-size:150%;'>The Republic's Dragon</div>", false, 'black');
+		this.display("<div style='font-size:150%; margin-top:0.5em;'>The Republic's Dragon</div>", false, 'black');
 
 		this.single_game_button=document.getElementById("single-game-button");
 		this.single_game_button.style.display = 'block';
@@ -381,14 +391,13 @@ var Game = (function() {
 		}
 	}
 	Game.prototype.next_level = function() {
+		this.map = new Map(this);
+		this.me = new Player();
+		map = this.map;
+		me = this.me;
 		if(this.mode==this.CAMPAIGN) {
 			this.level+=1;
 		}
-		this.map = new Map(this);
-		this.me = new Player();
-		this.display(this.map.objective_string, 3000);
-		map = this.map;
-		me = this.me;
 	};
 	return Game;
 })();
@@ -408,6 +417,7 @@ document.onkeyup = function(k) {
 LEFT = 37; RIGHT = 39;
 UP = 38; DOWN = 40;
 SPACE = 32;
+W = 87; A = 65; S = 83; D = 68;
 
 touchscreen_touched = false;
 if('ontouchstart' in document) {
@@ -464,13 +474,13 @@ Game.prototype.controls = function(dt) {
 		else { me.fire_size = 0.0; me.fire_time=0.0; }
 	}
 	else { //keyboard controls
-		if(keys[LEFT] && me.da>-me.max_da) { me.da -= me.dda; }
-		else if(keys[RIGHT] && me.da<me.max_da) { me.da += me.dda; }
-		else if(!keys[LEFT] && !keys[RIGHT]) { me.da = 0.0; }
+		if( (keys[LEFT] || keys[A]) && me.da>-me.max_da) { me.da -= me.dda; }
+		else if( (keys[RIGHT] || keys[D]) && me.da<me.max_da) { me.da += me.dda; }
+		else if(!(keys[LEFT] || keys[A]) && !(keys[RIGHT] || keys[D])) { me.da = 0.0; }
 	
-		if(keys[DOWN] && me.dv>-me.max_dv) { me.dv -= me.ddv*2; }
-		else if(keys[UP] && me.dv<me.max_dv) { me.dv += me.ddv; }
-		else if(!keys[DOWN] && !keys[UP]) { me.dv = 0.0; }
+		if( (keys[DOWN] || keys[S]) && me.dv>-me.max_dv) { me.dv -= me.ddv*2; }
+		else if( (keys[UP] || keys[W]) && me.dv<me.max_dv) { me.dv += me.ddv; }
+		else if(!(keys[DOWN] || keys[S]) && !(keys[UP] || keys[W])) { me.dv = 0.0; }
 	
 		if(keys[SPACE]) {
 			me.fire_size += me.fire_speed*dt;
@@ -642,6 +652,10 @@ Game.prototype.draw = function() {
 		g.scale(game.scale, game.scale);
 		g.dragon(q,s);
 		g.restore();
+		return;
+	}
+	if(map.state==map.SPLASH) {
+		game.canvas.width = game.canvas.width;
 		return;
 	}
 	if(map.state==map.DEFEAT) {
