@@ -251,14 +251,14 @@ var Map = (function() {
 		}
 		else {
 			game.display_box.style.background='#DDD';
-			game.display('<div>'+game.level_text[game.level]+'</div>', false);
+			game.display('<div>'+game.level_text[game.level]+'</div>', false, 'black');
 			game.canvas.onmousedown = function(e) {
 				game.canvas.onmousedown = null;
-				game.display('Objective: terrify the enemy');
-				map.state = map.PLAYING;
 				game.display_box.style.background='none';
+				game.display('Objective: terrify the enemy', 3000);
 				map.win_condition = function(game) { return game.map.enemies_destroyed_count>0; }
 				map.is_goal = function(obj) { return !obj.burned && obj.type!=BULLET && obj.type!=CANNONBALL; }
+				map.state = map.PLAYING;
 			}
 			this.state = this.SPLASH;
 		}
