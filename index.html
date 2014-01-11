@@ -692,7 +692,7 @@ Game.prototype.logic = function(dt) {
 			var x = me.x - me.sin_neg_a*40;
 			var y = me.y - me.cos_neg_a*40;
 		
-			if(c.cooldown>0.0) //run! dragon!
+			if(c.cooldown>0.0 && c.type!==CANNON) //run! dragon!
 				var aim_angle = Math.atan2(-c.x+me.x, -c.y+me.y);
 			else
 				var aim_angle = Math.atan2(c.x-me.x - me.dx*300, c.y-me.y - me.dy*300);
