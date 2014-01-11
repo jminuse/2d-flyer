@@ -260,8 +260,16 @@ function Cannonball(x,y,a,guarding,burned,cooldown) {
 var Point = function(x,y) {
 	this.x = x; this.y = y;
 }
-var TopoCurve = function(r) {
+var PointBox = function(x,y,w,h,p,q,curve) {
+	this.x = x; this.y = y;
+	this.width = w; this.height = h;
+	this.p = p; this.q = q;
+	this.curve = curve;
+}
+var TopoCurve = function(r,x,y) {
 	this.r = r;
+	this.x = x;
+	this.y = y;
 	this.points = [];
 }
 var Map = (function() {
@@ -294,7 +302,10 @@ var Map = (function() {
 		this.topo = [];
 		this.hills = [];
 		
-		for(var t=0; t<(this.width+640*2)*(this.height+640*2)*0.00002; t++) {
+		var bounds = {x:-640, y:-640, width:this.width+640, height:this.height+640}
+		var quad = new QuadTree(bounds);
+		
+		for(var t=0; t<(this.width+640*2)*(this.height+640*2)*0.00004; t++) {
 			var x=Math.random()*(this.width+640*2);
 			var y=Math.random()*(this.height+640*2);
 			var hill_added = false;
@@ -305,24 +316,29 @@ var Map = (function() {
 				var curve = new TopoCurve(r);
 				var old = null;
 				var intersects = false;
+				var wonkx = 0;//Math.random()*r*0.3;
+				var wonky = 0;//Math.random()*r*0.3;
 				for(var theta=0; theta<2*Math.PI && !intersects; theta+=2*Math.PI/(Math.sqrt(r/min_hill_size)*8)) {
-					var xx = x+Math.cos(theta)*r;
-					var yy = y+Math.sin(theta)*r;
+					var xx = x+Math.cos(theta)*r + Math.sin(theta)*wonkx;
+					var yy = y+Math.sin(theta)*r + Math.cos(theta)*wonky;
 					if(xx<-640 || xx>this.width+640 || yy<-640 || yy>this.height+640) { intersects=true; }
 					var point = new Point(xx,yy);
 					
 					if(old) { //misses one line, from last back to first
-						for(var tt=0; tt<map.topo.length-1 && !intersects; tt++) {
-							var other_curve = map.topo[tt];
-							for(var u=0; u<other_curve.points.length && !intersects; u++) {
-								var a = other_curve.points[u];
-								var b = other_curve.points[u+1];
-								if(u+1==other_curve.points.length) { b = other_curve.points[0]; }
-							
-								if( line_intersects(a,b,old,point) ) intersects = true;
-							}
+						var x0 = Math.min(old.x, point.x)|0;
+						var x1 = Math.max(old.x, point.x)|0;
+						var y0 = Math.min(old.y, point.y)|0+1;
+						var y1 = Math.max(old.y, point.y)|0+1;
+						
+						var items = quad.retrieve({x:x0, y:y0, width:x1-x0, height:y1-y0});
+						
+						for(var item_i=0; item_i<items.length && !intersects; item_i++) {
+							var it = items[item_i];
+							if(it.curve===curve) continue;
+							if( line_intersects(it.p, it.q, old, point) ) { intersects = true; }
 						}
 						if(intersects) continue;
+						quad.insert( new PointBox(x0, y0, x1-x0, y1-y0, old, point, curve) );
 					}
 					curve.points.push(point);
 					old = point;
@@ -352,22 +368,35 @@ var Map = (function() {
 				q.y += (range-Math.random()*range*2);
 				
 				var intersects = false;
-				for(var tt=0; tt<map.topo.length && !intersects; tt++) {
-					if(t==tt) continue;
-					var other_curve = map.topo[tt];
-					for(var u=0; u<other_curve.points.length && !intersects; u++) {
-						var a = other_curve.points[u];
-						var b = other_curve.points[u+1];
-						if(u+1==other_curve.points.length) { b = other_curve.points[0]; }
 				
-						if( line_intersects(a,b,p,q) || line_intersects(a,b,q,r) ) {
-							intersects = true;
-						}
-					}
+				/*var pq_x0 = Math.min(p.x, q.x)|0;
+				var pq_x1 = Math.max(p.x, q.x)|0;
+				var pq_y0 = Math.min(p.y, q.y)|0+1;
+				var pq_y1 = Math.max(p.y, q.y)|0+1;
+				var items = quad.retrieve({x:pq_x0, y:pq_y0, width:pq_x1-pq_x0, height:pq_y1-pq_y0});
+				
+				for(var item_i=0; item_i<items.length && !intersects; item_i++) {
+					var it = items[item_i];
+					if(it.curve===curve) continue;
+					if( line_intersects(it.p, it.q, p, q) ) { intersects = true; }
 				}
+				if(!intersects) {
+					var qr_x0 = Math.min(q.x, r.x)|0;
+					var qr_x1 = Math.max(q.x, r.x)|0;
+					var qr_y0 = Math.min(q.y, r.y)|0+1;
+					var qr_y1 = Math.max(q.y, r.y)|0+1;
+					items = quad.retrieve({x:qr_x0, y:qr_y0, width:qr_x1-qr_x0, height:qr_y1-qr_y0});
+				
+					for(var item_i=0; item_i<items.length && !intersects; item_i++) {
+						var it = items[item_i];
+						if(it.curve===curve) continue;
+						if( line_intersects(it.p, it.q, q, r) ) { intersects = true; }
+					}
+				}*/
 				if(intersects) {
 					q.x = old_x; q.y = old_y;
 				}
+				
 			}
 		}
 		
