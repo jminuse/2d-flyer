@@ -434,8 +434,8 @@ var Map = (function() {
 					var xxx = xx+Math.cos(theta)*100;
 					var yyy = yy+Math.sin(theta)*100;
 					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-					//this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
-					//this.enemy_count += 1;
+					this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
+					this.enemy_count += 1;
 				
 					xxx = xx+Math.cos(theta)*50;
 					yyy = yy+Math.sin(theta)*50;
@@ -691,7 +691,7 @@ Game.prototype.logic = function(dt) {
 			}
 			else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
 				var damage = 30;
-				if(p.type==BULLET) { damage = 1; }
+				if(p.type==BULLET) { damage = 0.5; }
 				p.x = -1000.0; p.y = -1000.0;
 				me.health -= damage;
 			}
