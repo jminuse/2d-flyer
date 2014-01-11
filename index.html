@@ -89,8 +89,11 @@ CanvasRenderingContext2D.prototype.dragon = function(q,s) {
 	grd.addColorStop(1,'#FF0');
 	g.fillStyle=grd;
 	g.fill();
-	g.fillRect(-3,15, 1.5,5+10*s);
-	g.fillRect(1.5,15, 1.5,5+10*s);
+	g.fillRect(-3,15, 1.5,5+8*s);
+	g.fillRect(1.5,15, 1.5,5+8*s);
+	
+	g.fillRect(-3.5,10-5*s, 1.5,5*s);
+	g.fillRect(2,10-5*s,    1.5,5*s);
 };
 CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
 	if(o.type==CANNON) {
@@ -689,7 +692,8 @@ Game.prototype.logic = function(dt) {
 			if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) > game.look_distance*game.look_distance) {
 				p.x = -1000.0; p.y = -1000.0;
 			}
-			else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
+			//else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
+			if( rx>-10 && ry>-10 && rx<10 && ry<70 ) {
 				var damage = 30;
 				if(p.type==BULLET) { damage = 0.5; }
 				p.x = -1000.0; p.y = -1000.0;
