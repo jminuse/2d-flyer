@@ -397,8 +397,8 @@ var Map = (function() {
 				var xxx = xx+Math.cos(theta)*100;
 				var yyy = yy+Math.sin(theta)*100;
 				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-				this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
-				this.enemy_count += 1;
+				//this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
+				//this.enemy_count += 1;
 				
 				xxx = xx+Math.cos(theta)*50;
 				yyy = yy+Math.sin(theta)*50;
@@ -626,6 +626,11 @@ Game.prototype.logic = function(dt) {
 	var nearest_goal_distance = 1e6;
 	for(var i=0; i<map.objects.length; i++) {
 		var o = map.objects[i];
+		var xx = o.x-me.x;
+		var yy = o.y-me.y;
+		var rx =  me.cos_neg_a*xx - me.sin_neg_a*yy;
+		var ry = -me.sin_neg_a*xx - me.cos_neg_a*yy + 50;
+		
 		var dist_squared = (o.x-me.x)*(o.x-me.x) + (o.y-me.y)*(o.y-me.y);
 		if(map.is_goal(o) && (!nearest_goal || dist_squared<nearest_goal_distance)) {
 			nearest_goal = o;
@@ -685,7 +690,7 @@ Game.prototype.logic = function(dt) {
 			if(c.cooldown>0.0) { c.cooldown -= dt; }
 			else { c.cooldown = 0.0; }
 		
-			if( (c.x-x)*(c.x-x) + (c.y-y)*(c.y-y) < me.fire_size*me.fire_size*0.7*0.7 ) {
+			if( rx>-me.fire_size*1.0 && ry<me.fire_size*1.5 && rx<me.fire_size*1.0 && ry>me.fire_size*1.0 ) {
 				c.burned = true;
 				map.enemies_destroyed_count+=1;
 			}
@@ -714,7 +719,7 @@ Game.prototype.logic = function(dt) {
 			var x = me.x - me.sin_neg_a*40;
 			var y = me.y - me.cos_neg_a*40;
 			
-			if( (w.x-x)*(w.x-x) + (w.y-y)*(w.y-y) < me.fire_size*me.fire_size*1.0*1.0 ) {
+			if( rx>-me.fire_size*1.0 && ry<me.fire_size*1.5 && rx<me.fire_size*1.0 && ry>me.fire_size*1.0 ) {
 				w.burned = true;
 				map.wagons_burned_count+=1;
 				map.enemies_destroyed_count+=1;
@@ -833,11 +838,9 @@ Game.prototype.draw = function() {
 		var o = map.objects[i];
 		var xx = o.x-me.x;
 		var yy = o.y-me.y;
-		var ss = me.sin_neg_a;
-		var cc = me.cos_neg_a;
-		var xxx = cc*xx - ss*yy;
-		var yyy = ss*xx + cc*yy;
-		if( yyy<-480+50-50 || xxx<-340/2-50 || yyy>50+50 || xxx>340/2+50 ) { continue; }
+		var rx =  me.cos_neg_a*xx - me.sin_neg_a*yy;
+		var ry = -me.sin_neg_a*xx - me.cos_neg_a*yy + 50;
+		if( ry>480+50 || rx<-340/2-50 || ry<-50 || rx>340/2+50 ) { continue; }
 		g.save();
 		g.draw_map_object(o);
 		g.restore();
