@@ -12,7 +12,6 @@
 	<div style='position:absolute; top:0em; left:50%; text-align:center; pointer-events:none;' id='display'></div>
 	<div class='bookmark' id='campaign-button'>Campaign</div>
 	<div class='bookmark' id='single-game-button'>Single game</div>
-<script src='QuadTree.js'></script>
 <script>
 function line_intersects(p0, p1, p2, p3, intersection) {
 	var s1_x = p1.x - p0.x;     var s1_y = p1.y - p0.y;
@@ -122,6 +121,17 @@ CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
 		g.fillRect(15+1, -25, 3, 20);
 		g.fillRect(-15-3-1, -25, 3, 20);
 	}
+	else if(o.type==CIVILIAN) {
+		var n = o;
+		g.translate(n.x, n.y);
+		g.rotate(-n.a);
+		g.fillStyle=n.burned ? '#000' : 'brown';
+		g.fillRect(-6,-3,12,6);
+		g.beginPath();
+		g.arc(0, 0, 4, 0, 2*Math.PI);
+		g.fillStyle=n.burned ? '#000' : '#FF5';
+		g.fill();
+	}
 	else if(o.type==INFANTRY) {
 		var n = o;
 		g.translate(n.x, n.y);
@@ -226,7 +236,7 @@ var Player = (function() {
 
 BULLET = 1; CANNONBALL = 2;
 CANNON = 3; WAGON = 4; INFANTRY = 5;
-CAVALRY = 6;
+CAVALRY = 6; CIVILIAN = 7;
 
 var MapObject = (function() {
 	function MapObject(type,x,y,a,guarding,burned,cooldown) {
@@ -241,7 +251,7 @@ var MapObject = (function() {
 		this.dx = 0.0;
 		this.dy = 0.0;
 		if(type==CAVALRY) { this.v = 0.06; this.da = 0.002; this.guarding_distance=200; }
-		else if(type==INFANTRY) { this.v = 0.02; this.da = 0.002; this.guarding_distance=100; }
+		else if(type==INFANTRY || type==CIVILIAN) { this.v = 0.02; this.da = 0.002; this.guarding_distance=100; }
 		else if(type==CANNON) { this.da = 0.0001; this.guarding_distance=100; }
 	}
 	return MapObject;
@@ -304,8 +314,6 @@ var Map = (function() {
 			}
 			this.state = this.SPLASH;
 		}
-		this.width = 2000;
-		this.height = 2000;
 		this.objects = [];
 		this.wagon_count = 0;
 		this.wagons_burned_count = 0;
@@ -314,124 +322,147 @@ var Map = (function() {
 		this.topo = [];
 		this.hills = [];
 		
-		var line_segments = [];
+		this.init_civilians = function() {
+			this.width = 1000;
+			this.height = 1000;
+			for(var i=0; i<100; i++) {
+				var x=Math.random()*this.width;
+				var y=Math.random()*this.height;
+				this.objects.push( new MapObject(CIVILIAN,x,y,Math.random()*Math.PI*2) );
+				this.enemy_count += 1;
+			}
+		}
 		
-		for(var t=0; t<(this.width+640*2)*(this.height+640*2)*0.00004; t++) {
-			var x=Math.random()*(this.width+640*2);
-			var y=Math.random()*(this.height+640*2);
-			var hill_added = false;
-			var hill = new Point(x,y);
-			var min_hill_size = 50;
-			var hill_size = 200+Math.random()*200;
-			for(var r=min_hill_size; r<hill_size; r=1.2*r + 50) {
-				var curve = new TopoCurve(r);
-				var old = null;
-				var intersects = false;
-				var wonkx = 0;//Math.random()*r*0.3;
-				var wonky = 0;//Math.random()*r*0.3;
-				for(var theta=0; theta<2*Math.PI && !intersects; theta+=2*Math.PI/(Math.sqrt(r/min_hill_size)*8)) {
-					var xx = x+Math.cos(theta)*r + Math.sin(theta)*wonkx;
-					var yy = y+Math.sin(theta)*r + Math.cos(theta)*wonky;
-					if(xx<-640 || xx>this.width+640 || yy<-640 || yy>this.height+640) { intersects=true; }
-					var point = new Point(xx,yy);
+		this.init_hill_armies = function() {
+			this.width = 2000;
+			this.height = 2000;
+			var line_segments = [];
+		
+			for(var t=0; t<(this.width+640*2)*(this.height+640*2)*0.00004; t++) {
+				var x=Math.random()*(this.width+640*2);
+				var y=Math.random()*(this.height+640*2);
+				var hill_added = false;
+				var hill = new Point(x,y);
+				var min_hill_size = 50;
+				var hill_size = 200+Math.random()*200;
+				for(var r=min_hill_size; r<hill_size; r=1.2*r + 50) {
+					var curve = new TopoCurve(r);
+					var old = null;
+					var intersects = false;
+					var wonkx = 0;//Math.random()*r*0.3;
+					var wonky = 0;//Math.random()*r*0.3;
+					for(var theta=0; theta<2*Math.PI && !intersects; theta+=2*Math.PI/(Math.sqrt(r/min_hill_size)*8)) {
+						var xx = x+Math.cos(theta)*r + Math.sin(theta)*wonkx;
+						var yy = y+Math.sin(theta)*r + Math.cos(theta)*wonky;
+						if(xx<-640 || xx>this.width+640 || yy<-640 || yy>this.height+640) { intersects=true; }
+						var point = new Point(xx,yy);
 					
-					if(old) { //misses one line, from last back to first
-						var x0 = Math.min(old.x, point.x)|0;
-						var x1 = Math.max(old.x, point.x)|0;
-						var y0 = Math.min(old.y, point.y)|0+1;
-						var y1 = Math.max(old.y, point.y)|0+1;
+						if(old) { //misses one line, from last back to first
+							var x0 = Math.min(old.x, point.x)|0;
+							var x1 = Math.max(old.x, point.x)|0;
+							var y0 = Math.min(old.y, point.y)|0+1;
+							var y1 = Math.max(old.y, point.y)|0+1;
 						
-						for(var item_i=0; item_i<line_segments.length && !intersects; item_i++) {
-							var it = line_segments[item_i];
-							if(it.curve===curve) continue;
-							if( line_intersects(it.p, it.q, old, point) ) { intersects = true; }
+							for(var item_i=0; item_i<line_segments.length && !intersects; item_i++) {
+								var it = line_segments[item_i];
+								if(it.curve===curve) continue;
+								if( line_intersects(it.p, it.q, old, point) ) { intersects = true; }
+							}
+							if(intersects) continue;
+							line_segments.push( new LineSegment(old, point, curve) );
 						}
-						if(intersects) continue;
-						line_segments.push( new LineSegment(old, point, curve) );
+						curve.points.push(point);
+						old = point;
 					}
-					curve.points.push(point);
-					old = point;
-				}
-				if(!intersects) {
-					this.topo.push(curve);
-					if(!hill_added) {this.hills.push( hill ); hill_added=true; hill.height=0; }
-					else { hill.height++; }
+					if(!intersects) {
+						this.topo.push(curve);
+						if(!hill_added) {this.hills.push( hill ); hill_added=true; hill.height=0; }
+						else { hill.height++; }
+					}
 				}
 			}
-		}
 		
-		for(var step=0; step<2; step++)
-		for(var t=map.topo.length-1; t>=0; t--) {
-			var curve = map.topo[t];
-			for(var v=0; v<curve.points.length; v++) {
-				var p = curve.points[v];
-				var range = 1.5*Math.sqrt(curve.r);
-				p.x += (range-Math.random()*range*2);
-				p.y += (range-Math.random()*range*2);
+			for(var step=0; step<2; step++) {
+				for(var t=map.topo.length-1; t>=0; t--) {
+					var curve = map.topo[t];
+					for(var v=0; v<curve.points.length; v++) {
+						var p = curve.points[v];
+						var range = 1.5*Math.sqrt(curve.r);
+						p.x += (range-Math.random()*range*2);
+						p.y += (range-Math.random()*range*2);
+					}
+				}
 			}
-		}
 		
-		for(var j=0; j<10; j++) { this.objects.push( new MapObject(CANNONBALL) ); }
+			for(var j=0; j<10; j++) { this.objects.push( new MapObject(CANNONBALL) ); }
 
-		for(var x=0; x<this.width && false; x+=50) {
-			for(var y=0; y<this.height; y+=50) {
-				var w = new MapObject(WAGON,x,y,0);
+			for(var x=0; x<this.width && false; x+=50) {
+				for(var y=0; y<this.height; y+=50) {
+					var w = new MapObject(WAGON,x,y,0);
+					this.objects.push( w );
+					this.enemy_count += 1;
+					this.wagon_count += 1;
+				}
+			}
+
+			this.hills.sort( function(a,b) {return b.height-a.height;} );
+
+			for(var k=0; k<10; k++) {
+				var h = k;
+				do {
+					var hill = this.hills[h];
+					var x = hill.x; var y = hill.y;
+					if(x<0 || x>this.width || y<0 || y>this.height) { h++; continue; }
+					//var x=Math.random()*this.width;
+					//var y=Math.random()*this.height;
+					var nearest_d2 = 1e6;
+					for(var i=0; i<this.objects.length; i++) {
+						var o = this.objects[i];
+						var d2 = (o.x-x)*(o.x-x) + (o.y-y)*(o.y-y);
+						nearest_d2 = Math.min(nearest_d2, d2);
+					}
+					h++;
+				} while(nearest_d2<150*150 || x<0 || x>this.width || y<0 || y>this.height);
+		
+				var xx = x; var yy = y;
+				var w = new MapObject(WAGON,xx,yy,Math.random()*2*Math.PI);
 				this.objects.push( w );
 				this.enemy_count += 1;
 				this.wagon_count += 1;
-			}
-		}
-
-		this.hills.sort( function(a,b) {return b.height-a.height;} );
-
-		for(var k=0; k<10; k++) {
-			var h = k;
-			do {
-				var hill = this.hills[h];
-				var x = hill.x; var y = hill.y;
-				if(x<0 || x>this.width || y<0 || y>this.height) { h++; continue; }
-				//var x=Math.random()*this.width;
-				//var y=Math.random()*this.height;
-				var nearest_d2 = 1e6;
-				for(var i=0; i<this.objects.length; i++) {
-					var o = this.objects[i];
-					var d2 = (o.x-x)*(o.x-x) + (o.y-y)*(o.y-y);
-					nearest_d2 = Math.min(nearest_d2, d2);
-				}
-				h++;
-			} while(nearest_d2<150*150 || x<0 || x>this.width || y<0 || y>this.height);
-		
-			var xx = x; var yy = y;
-			var w = new MapObject(WAGON,xx,yy,Math.random()*2*Math.PI);
-			this.objects.push( w );
-			this.enemy_count += 1;
-			this.wagon_count += 1;
 			
-			for(var theta=0; theta<2*Math.PI; theta+=2*Math.PI/10) {
-				var xxx = xx+Math.cos(theta)*100;
-				var yyy = yy+Math.sin(theta)*100;
-				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-				//this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
-				//this.enemy_count += 1;
+				for(var theta=0; theta<2*Math.PI; theta+=2*Math.PI/10) {
+					var xxx = xx+Math.cos(theta)*100;
+					var yyy = yy+Math.sin(theta)*100;
+					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
+					//this.objects.push( new MapObject(CANNON,xxx,yyy,-theta-Math.PI/2,w) );
+					//this.enemy_count += 1;
 				
-				xxx = xx+Math.cos(theta)*50;
-				yyy = yy+Math.sin(theta)*50;
-				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-				this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-Math.PI/2,w) );
-				this.enemy_count += 1;
+					xxx = xx+Math.cos(theta)*50;
+					yyy = yy+Math.sin(theta)*50;
+					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
+					this.objects.push( new MapObject(INFANTRY,xxx,yyy,-theta-Math.PI/2,w) );
+					this.enemy_count += 1;
 				
-				xxx = xx+Math.cos(theta)*150;
-				yyy = yy+Math.sin(theta)*150;
-				if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
-				this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-Math.PI/2,w) );
+					xxx = xx+Math.cos(theta)*150;
+					yyy = yy+Math.sin(theta)*150;
+					if(xxx<0 || xxx>this.width || yyy<0 || yyy>this.height) { continue; }
+					this.objects.push( new MapObject(CAVALRY,xxx,yyy,-theta-Math.PI/2,w) );
+					this.enemy_count += 1;
+				}
+			}
+			for(var m=0; m<100; m++) {
+				var x=Math.random()*this.width;
+				var y=Math.random()*this.height;
+				this.objects.push( new MapObject(INFANTRY,x,y,Math.random()*Math.PI*2,w) );
 				this.enemy_count += 1;
 			}
 		}
-		for(var m=0; m<100; m++) {
-			var x=Math.random()*this.width;
-			var y=Math.random()*this.height;
-			this.objects.push( new MapObject(INFANTRY,x,y,Math.random()*Math.PI*2,w) );
-			this.enemy_count += 1;
+		
+		if(game.mode==game.CAMPAIGN && game.level==0) {
+			this.init_civilians();
+		}
+		else {
+			this.init_hill_armies();
 		}
 	}
 	return Map;
@@ -665,7 +696,7 @@ Game.prototype.logic = function(dt) {
 				me.health -= damage;
 			}
 		}
-		else if(o.type==CANNON || o.type==INFANTRY || o.type==CAVALRY) {
+		else if(o.type==CANNON || o.type==INFANTRY || o.type==CAVALRY || o.type==CIVILIAN) {
 			var c = o;
 			if( c.burned || (c.x-me.x)*(c.x-me.x) + (c.y-me.y)*(c.y-me.y) > game.look_distance*game.look_distance) { continue; }
 			
@@ -692,7 +723,7 @@ Game.prototype.logic = function(dt) {
 			var x = me.x - me.sin_neg_a*40;
 			var y = me.y - me.cos_neg_a*40;
 		
-			if(c.cooldown>0.0 && c.type!==CANNON) //run! dragon!
+			if(c.type===CIVILIAN || (c.cooldown>0.0 && c.type!==CANNON)) //run! dragon!
 				var aim_angle = Math.atan2(-c.x+me.x, -c.y+me.y);
 			else
 				var aim_angle = Math.atan2(c.x-me.x - me.dx*300, c.y-me.y - me.dy*300);
@@ -722,7 +753,7 @@ Game.prototype.logic = function(dt) {
 					valid_projectile.dy = -0.2*cos_a;
 					valid_projectile.type=CANNONBALL;
 				}
-				else {
+				else if(c.type==INFANTRY || c.type==CAVALRY) {
 					valid_projectile.dx = -0.4*sin_a;
 					valid_projectile.dy = -0.4*cos_a;
 					valid_projectile.type=BULLET;
