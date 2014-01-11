@@ -80,10 +80,11 @@ CanvasRenderingContext2D.prototype.dragon = function(q,s) {
 	g.moveTo(0,-2);
 	g.quadraticCurveTo(-6, 15, 0, 15+10*s);
 	g.quadraticCurveTo( 6, 15, 0, -2);
-	g.moveTo(0,40+10*s);
+	//tail
+	g.moveTo(0,35+15*s);
 	g.lineTo(1,20);
 	g.lineTo(-1,20);
-	g.lineTo(0,40+10*s);
+	g.lineTo(0,35+15*s);
 	var grd=g.createRadialGradient(0,20, 40*s, 0,20, 50*s);
 	grd.addColorStop(0,'#000');
 	grd.addColorStop(1,'#FF0');
@@ -565,6 +566,10 @@ for(var i=0; i<256; i++) {
 	keys[i] = false;
 }
 document.onkeydown = function(k) {
+	if(!keys[k.which]) { //just pressed
+		if(k.which==LEFT) { me.x -= me.cos_neg_a*10; me.y += me.sin_neg_a*10; }
+		else if(k.which==RIGHT) { me.x += me.cos_neg_a*10; me.y -= me.sin_neg_a*10; }
+	}
 	keys[k.which]=true;
 };
 document.onkeyup = function(k) {
@@ -693,7 +698,7 @@ Game.prototype.logic = function(dt) {
 				p.x = -1000.0; p.y = -1000.0;
 			}
 			//else if((me.x-p.x)*(me.x-p.x) + (me.y-p.y)*(me.y-p.y) < 20*20) {
-			if( rx>-10 && ry>-10 && rx<10 && ry<70 ) {
+			if( rx>-10 && ry>20 && rx<10 && ry<70 ) {
 				var damage = 30;
 				if(p.type==BULLET) { damage = 0.5; }
 				p.x = -1000.0; p.y = -1000.0;
