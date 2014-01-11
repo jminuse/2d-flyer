@@ -566,10 +566,10 @@ for(var i=0; i<256; i++) {
 	keys[i] = false;
 }
 document.onkeydown = function(k) {
-	if(!keys[k.which]) { //just pressed
+	/*if(!keys[k.which]) { //just pressed
 		if(k.which==LEFT) { me.x -= me.cos_neg_a*10; me.y += me.sin_neg_a*10; }
 		else if(k.which==RIGHT) { me.x += me.cos_neg_a*10; me.y -= me.sin_neg_a*10; }
-	}
+	}*/
 	keys[k.which]=true;
 };
 document.onkeyup = function(k) {
