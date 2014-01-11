@@ -260,9 +260,7 @@ function Cannonball(x,y,a,guarding,burned,cooldown) {
 var Point = function(x,y) {
 	this.x = x; this.y = y;
 }
-var PointBox = function(x,y,w,h,p,q,curve) {
-	this.x = x; this.y = y;
-	this.width = w; this.height = h;
+var LineSegment = function(p,q,curve) {
 	this.p = p; this.q = q;
 	this.curve = curve;
 }
@@ -302,8 +300,7 @@ var Map = (function() {
 		this.topo = [];
 		this.hills = [];
 		
-		var bounds = {x:-640, y:-640, width:this.width+640, height:this.height+640}
-		var quad = new QuadTree(bounds);
+		var line_segments = [];
 		
 		for(var t=0; t<(this.width+640*2)*(this.height+640*2)*0.00004; t++) {
 			var x=Math.random()*(this.width+640*2);
@@ -330,15 +327,13 @@ var Map = (function() {
 						var y0 = Math.min(old.y, point.y)|0+1;
 						var y1 = Math.max(old.y, point.y)|0+1;
 						
-						var items = quad.retrieve({x:x0, y:y0, width:x1-x0, height:y1-y0});
-						
-						for(var item_i=0; item_i<items.length && !intersects; item_i++) {
-							var it = items[item_i];
+						for(var item_i=0; item_i<line_segments.length && !intersects; item_i++) {
+							var it = line_segments[item_i];
 							if(it.curve===curve) continue;
 							if( line_intersects(it.p, it.q, old, point) ) { intersects = true; }
 						}
 						if(intersects) continue;
-						quad.insert( new PointBox(x0, y0, x1-x0, y1-y0, old, point, curve) );
+						line_segments.push( new LineSegment(old, point, curve) );
 					}
 					curve.points.push(point);
 					old = point;
@@ -356,47 +351,9 @@ var Map = (function() {
 			var curve = map.topo[t];
 			for(var v=0; v<curve.points.length; v++) {
 				var p = curve.points[v];
-				var q = curve.points[v+1];
-				var r = curve.points[v+2];
-				if(v+1>curve.points.length-1) { q = curve.points[0]; }
-				if(v+2>curve.points.length-1) { r = curve.points[v+2-curve.points.length]; }
-			
-				var old_x = q.x;
-				var old_y = q.y;
 				var range = 1.5*Math.sqrt(curve.r);
-				q.x += (range-Math.random()*range*2);
-				q.y += (range-Math.random()*range*2);
-				
-				var intersects = false;
-				
-				/*var pq_x0 = Math.min(p.x, q.x)|0;
-				var pq_x1 = Math.max(p.x, q.x)|0;
-				var pq_y0 = Math.min(p.y, q.y)|0+1;
-				var pq_y1 = Math.max(p.y, q.y)|0+1;
-				var items = quad.retrieve({x:pq_x0, y:pq_y0, width:pq_x1-pq_x0, height:pq_y1-pq_y0});
-				
-				for(var item_i=0; item_i<items.length && !intersects; item_i++) {
-					var it = items[item_i];
-					if(it.curve===curve) continue;
-					if( line_intersects(it.p, it.q, p, q) ) { intersects = true; }
-				}
-				if(!intersects) {
-					var qr_x0 = Math.min(q.x, r.x)|0;
-					var qr_x1 = Math.max(q.x, r.x)|0;
-					var qr_y0 = Math.min(q.y, r.y)|0+1;
-					var qr_y1 = Math.max(q.y, r.y)|0+1;
-					items = quad.retrieve({x:qr_x0, y:qr_y0, width:qr_x1-qr_x0, height:qr_y1-qr_y0});
-				
-					for(var item_i=0; item_i<items.length && !intersects; item_i++) {
-						var it = items[item_i];
-						if(it.curve===curve) continue;
-						if( line_intersects(it.p, it.q, q, r) ) { intersects = true; }
-					}
-				}*/
-				if(intersects) {
-					q.x = old_x; q.y = old_y;
-				}
-				
+				p.x += (range-Math.random()*range*2);
+				p.y += (range-Math.random()*range*2);
 			}
 		}
 		
