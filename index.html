@@ -797,7 +797,7 @@ var skip = 0;
 Game.prototype.draw = function() {
 	requestAnimationFrame(game.draw);
 	skip++;
-	if(skip>=2) { skip=0; return; }
+	if(skip>=2) { skip=0; /*return;*/ }
 	if(game.previous_time==0) game.previous_time = +new Date();
 	var current_time = +new Date();
 	var dt = current_time - game.previous_time;
