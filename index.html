@@ -215,7 +215,7 @@ var Player = (function() {
 		this.a = Math.PI/2;
 		this.da = 0.0;
 		this.max_da = 0.002;
-		this.dda = 0.0002;
+		this.dda = 0.0004;
 		this.sin_neg_a = Math.sin(-this.a);
 		this.cos_neg_a = Math.cos(-this.a);
 		this.x = 0.0;
@@ -306,7 +306,7 @@ var TopoCurve = function(r,x,y) {
 var Map = (function() {
 	function Map(game) {
 		map = this;
-		this.NOT_STARTED=0; this.PLAYING=1; this.VICTORY=2; this.DEFEAT=3;
+		this.NOT_STARTED=0; this.PLAYING=1; this.VICTORY=2; this.DEFEAT=3; this.VICTORY_LAST_FRAME=4; this.DEFEAT_LAST_FRAME=5;
 		this.loss_condition = function(game) { return game.me.health<=0; }
 		if(game.mode==game.SINGLE_GAME) {
 			game.init_destroy_wagons();
@@ -665,6 +665,8 @@ Game.prototype.logic = function() {
 	
 	var dt = game.logic_timestep;
 	
+	game.controls(dt);
+	
 	me.olda = me.a;
 	me.oldx = me.x;
 	me.oldy = me.y;
@@ -798,13 +800,13 @@ Game.prototype.logic = function() {
 		}
 	}
 	if(map.loss_condition(game)) {
-		map.state = map.DEFEAT;
+		map.state = map.DEFEAT_LAST_FRAME;
 		game.display('We are defeated!<br>Pull back!', false);
 		game.single_game_button.style.display='block';
 		game.campaign_button.style.display='block';
 	}
 	if(map.win_condition(game)) {
-		map.state = map.VICTORY;
+		map.state = map.VICTORY_LAST_FRAME;
 		game.display('Victory!', false, 'blue');
 		game.single_game_button.style.display='block';
 		game.campaign_button.style.display='block';
@@ -851,8 +853,6 @@ Game.prototype.draw = function() {
 		return;
 	}
 	
-	game.controls(dt);
-	
 	var interpolate = (current_time-game.previous_logic_time)/game.logic_timestep;
 	var me_x = me.x+(me.x-me.oldx)*interpolate;
 	var me_y = me.y+(me.y-me.oldy)*interpolate;
@@ -868,6 +868,10 @@ Game.prototype.draw = function() {
 	g.rotate(-me_a);
 	g.translate(-game.canvas.width/2/game.scale, -game.canvas.height/game.scale+50);
 	g.translate(-me_x+game.canvas.width/2/game.scale, -me_y+game.canvas.height/game.scale-50);
+	
+	//if(keys[RIGHT] || keys[LEFT]) { //turning
+	//	g.scale(1.01, 1.0);
+	//}
 	
 	/*
 	g.beginPath(); //grid lines
@@ -894,19 +898,22 @@ Game.prototype.draw = function() {
 	g.strokeStyle = "#00A";
 	g.stroke();
 	
-	g.strokeStyle = "#000";
-	g.fillStyle = 'rgba(0,255,0,0.15)';
-	for(var t=map.topo.length-1; t>=0; t--) {
-		var curve = map.topo[t];
-		g.beginPath();
-		for(var u=0; u<curve.points.length; u++) {
-			var p = curve.points[u];
-			g.lineTo(p.x, p.y);
+	//map.topo = null;
+	if(map.topo) {
+		g.strokeStyle = "#000";
+		g.fillStyle = 'rgba(0,255,0,0.15)';
+		for(var t=map.topo.length-1; t>=0; t--) {
+			var curve = map.topo[t];
+			g.beginPath();
+			for(var u=0; u<curve.points.length; u++) {
+				var p = curve.points[u];
+				g.lineTo(p.x, p.y);
+			}
+			g.lineTo(curve.points[0].x, curve.points[0].y);
+			//g.fillStyle = 'rgba(0,255,0,'+(curve.r/400)+')';
+			g.fill();
+			//g.stroke();
 		}
-		g.lineTo(curve.points[0].x, curve.points[0].y);
-		//g.fillStyle = 'rgba(0,255,0,'+(curve.r/400)+')';
-		g.fill();
-		//g.stroke();
 	}
 	
 	for(var i=0; i<map.objects.length; i++) {
@@ -975,9 +982,16 @@ Game.prototype.draw = function() {
 	g.fillStyle = '#F00';
 	g.fillRect(5, 5, (game.canvas.width/game.scale-5*2)*Math.max(me.health/me.max_health, 0), 5);
 	g.restore();
+	
+	if(map.state==map.DEFEAT_LAST_FRAME) {
+		map.state = map.DEFEAT;
+	}
+	if(map.state==map.VICTORY_LAST_FRAME) {
+		map.state = map.VICTORY;
+	}
 }
 game.draw();
-game.logic_timestep = 50;
+game.logic_timestep = 30;
 setInterval(game.logic, game.logic_timestep);
 
 </script>
