@@ -96,11 +96,16 @@ CanvasRenderingContext2D.prototype.dragon = function(q,s) {
 	g.fillRect(-3.5,10-5*s, 1.5,5*s);
 	g.fillRect(2,10-5*s,    1.5,5*s);
 };
-CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
+CanvasRenderingContext2D.prototype.draw_map_object = function(o, interpolate) {
+
+	var o_x = o.x+(o.x-o.oldx)*interpolate;
+	var o_y = o.y+(o.y-o.oldy)*interpolate;
+	var o_a = o.a+(o.a-o.olda)*interpolate;
+
 	if(o.type==CANNON) {
 		var c = o;
-		g.translate(c.x, c.y);
-		g.rotate(-c.a);
+		g.translate(o_x, o_y);
+		g.rotate(-o_a);
 		var cannon_width = 10;
 		var wheel_width = 5;
 		var wheel_length = 30;
@@ -114,8 +119,8 @@ CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
 	}
 	else if(o.type==WAGON) {
 		var w = o;
-		g.translate(w.x, w.y);
-		g.rotate(-w.a);
+		g.translate(o_x, o_y);
+		g.rotate(-o_a);
 		g.fillStyle = w.burned ? '#000' : '#851';
 		g.fillRect(-15, -30, 30, 60);
 	
@@ -127,8 +132,8 @@ CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
 	}
 	else if(o.type==CIVILIAN) {
 		var n = o;
-		g.translate(n.x, n.y);
-		g.rotate(-n.a);
+		g.translate(o_x, o_y);
+		g.rotate(-o_a);
 		g.fillStyle=n.burned ? '#000' : 'brown';
 		g.fillRect(-6,-3,12,6);
 		g.beginPath();
@@ -138,8 +143,8 @@ CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
 	}
 	else if(o.type==INFANTRY) {
 		var n = o;
-		g.translate(n.x, n.y);
-		g.rotate(-n.a);
+		g.translate(o_x, o_y);
+		g.rotate(-o_a);
 		if(n.cooldown===0.0) { //draw musket
 			g.fillStyle=n.burned ? '#000' : '#777';
 			g.fillRect(1,-24,2,24);
@@ -161,8 +166,8 @@ CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
 	}
 	else if(o.type==CAVALRY) {
 		var c = o;
-		g.translate(c.x, c.y);
-		g.rotate(-c.a);
+		g.translate(o_x, o_y);
+		g.rotate(-o_a);
 		g.fillStyle=c.burned ? '#000' : '#631';
 		//g.fillRect(-6, -18, 6*2, 18*2);
 		g.roundRect(-6, -18, 6*2, 18*2, 4).fill();
@@ -194,11 +199,11 @@ CanvasRenderingContext2D.prototype.draw_map_object = function(o) {
 		var p = o;
 		g.beginPath();
 		if(p.type==CANNONBALL) {
-			g.arc(p.x, p.y, 5, 0, 2*Math.PI);
+			g.arc(o_x, o_y, 5, 0, 2*Math.PI);
 			g.fillStyle='#222';
 		}
 		else if(p.type==BULLET) {
-			g.arc(p.x, p.y, 2, 0, 2*Math.PI);
+			g.arc(o_x, o_y, 2, 0, 2*Math.PI);
 			g.fillStyle='#222';
 		}
 		g.fill();
@@ -687,6 +692,11 @@ Game.prototype.logic = function() {
 	var nearest_goal_distance = 1e6;
 	for(var i=0; i<map.objects.length; i++) {
 		var o = map.objects[i];
+		
+		o.olda = o.a;
+		o.oldx = o.x;
+		o.oldy = o.y;
+		
 		//for(var j=i+1; j<map.objects.length; j++) { var p = map.objects[j]; }
 		var xx = o.x-me.x;
 		var yy = o.y-me.y;
@@ -843,8 +853,6 @@ Game.prototype.draw = function() {
 	
 	game.controls(dt);
 	
-	var nearest_goal = game.nearest_goal;
-	
 	var interpolate = (current_time-game.previous_logic_time)/game.logic_timestep;
 	var me_x = me.x+(me.x-me.oldx)*interpolate;
 	var me_y = me.y+(me.y-me.oldy)*interpolate;
@@ -909,20 +917,25 @@ Game.prototype.draw = function() {
 		var ry = -me.sin_neg_a*xx - me.cos_neg_a*yy + 50;
 		if( ry>480+50 || rx<-340/2-50 || ry<-50 || rx>340/2+50 ) { continue; }
 		g.save();
-		g.draw_map_object(o);
+		g.draw_map_object(o, interpolate);
 		g.restore();
 	}
 
+  var nearest_goal = game.nearest_goal;
+  
 	if(nearest_goal) {
-		var xx = nearest_goal.x-me.x;
-		var yy = nearest_goal.y-me.y;
+		var nearest_goal_x = nearest_goal.x+(nearest_goal.x-nearest_goal.oldx)*interpolate;
+		var nearest_goal_y = nearest_goal.y+(nearest_goal.y-nearest_goal.oldy)*interpolate;
+		
+		var xx = nearest_goal_x-me_x;
+		var yy = nearest_goal_y-me_y;
 		var L = Math.sqrt(xx*xx + yy*yy);
 		g.beginPath();
-		g.moveTo(me.x + 15*xx/L, me.y + 15*yy/L);
-		g.lineTo(me.x + 50*xx/L, me.y + 50*yy/L);
-		g.quadraticCurveTo( me.x + 40*xx/L, me.y + 40*yy/L,  me.x + 30*xx/L - 10*yy/L, me.y + 30*yy/L + 10*xx/L);
-		g.moveTo(me.x + 50*xx/L, me.y + 50*yy/L);
-		g.quadraticCurveTo( me.x + 40*xx/L, me.y + 40*yy/L,  me.x + 30*xx/L + 10*yy/L, me.y + 30*yy/L - 10*xx/L);
+		g.moveTo(me_x + 15*xx/L, me_y + 15*yy/L);
+		g.lineTo(me_x + 50*xx/L, me_y + 50*yy/L);
+		g.quadraticCurveTo( me_x + 40*xx/L, me_y + 40*yy/L,  me_x + 30*xx/L - 10*yy/L, me_y + 30*yy/L + 10*xx/L);
+		g.moveTo(me_x + 50*xx/L, me_y + 50*yy/L);
+		g.quadraticCurveTo( me_x + 40*xx/L, me_y + 40*yy/L,  me_x + 30*xx/L + 10*yy/L, me_y + 30*yy/L - 10*xx/L);
 		g.strokeStyle = '#FFF';
 		g.lineWidth = 2;
 		g.stroke();
@@ -970,4 +983,3 @@ setInterval(game.logic, game.logic_timestep);
 </script>
 </body>
 </html>
-
