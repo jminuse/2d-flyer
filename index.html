@@ -655,7 +655,15 @@ Game.prototype.controls = function(dt) {
 	}
 }
 
-Game.prototype.logic = function(dt) {
+Game.prototype.logic = function() {
+	if(map.state != map.PLAYING) { return; }
+	
+	var dt = game.logic_timestep;
+	
+	me.olda = me.a;
+	me.oldx = me.x;
+	me.oldy = me.y;
+	
 	me.a += dt*me.da;
 	if(me.da!==0.0) {
 		me.sin_neg_a = Math.sin(-me.a);
@@ -791,18 +799,16 @@ Game.prototype.logic = function(dt) {
 		game.single_game_button.style.display='block';
 		game.campaign_button.style.display='block';
 	}
-	return nearest_goal;
+	game.nearest_goal = nearest_goal;
+	game.previous_logic_time = +new Date();
 }
-var skip = 0;
 Game.prototype.draw = function() {
 	requestAnimationFrame(game.draw);
-	skip++;
-	if(skip>=2) { skip=0; /*return;*/ }
 	if(game.previous_time==0) game.previous_time = +new Date();
 	var current_time = +new Date();
 	var dt = current_time - game.previous_time;
 	game.previous_time = current_time;
-	if(dt>500) { return; } //do not count offscreen time
+	if(dt>250) { return; } //do not count offscreen time
 	
 	if(game.mode==game.NOT_STARTED) {
 		game.canvas.width = game.canvas.width;
@@ -837,7 +843,12 @@ Game.prototype.draw = function() {
 	
 	game.controls(dt);
 	
-	var nearest_goal = game.logic(dt);
+	var nearest_goal = game.nearest_goal;
+	
+	var interpolate = (current_time-game.previous_logic_time)/game.logic_timestep;
+	var me_x = me.x+(me.x-me.oldx)*interpolate;
+	var me_y = me.y+(me.y-me.oldy)*interpolate;
+	var me_a = me.a+(me.a-me.olda)*interpolate;
 	
 	info.innerHTML = Math.round(1000/dt)+'fps';
 	//game.canvas.width = game.canvas.width;
@@ -846,9 +857,9 @@ Game.prototype.draw = function() {
 	g.scale(game.scale, game.scale);
 	g.save();
 	g.translate(game.canvas.width/2/game.scale, game.canvas.height/game.scale-50);
-	g.rotate(-me.a);
+	g.rotate(-me_a);
 	g.translate(-game.canvas.width/2/game.scale, -game.canvas.height/game.scale+50);
-	g.translate(-me.x+game.canvas.width/2/game.scale, -me.y+game.canvas.height/game.scale-50);
+	g.translate(-me_x+game.canvas.width/2/game.scale, -me_y+game.canvas.height/game.scale-50);
 	
 	/*
 	g.beginPath(); //grid lines
@@ -892,8 +903,8 @@ Game.prototype.draw = function() {
 	
 	for(var i=0; i<map.objects.length; i++) {
 		var o = map.objects[i];
-		var xx = o.x-me.x;
-		var yy = o.y-me.y;
+		var xx = o.x-me_x;
+		var yy = o.y-me_y;
 		var rx =  me.cos_neg_a*xx - me.sin_neg_a*yy;
 		var ry = -me.sin_neg_a*xx - me.cos_neg_a*yy + 50;
 		if( ry>480+50 || rx<-340/2-50 || ry<-50 || rx>340/2+50 ) { continue; }
@@ -953,6 +964,8 @@ Game.prototype.draw = function() {
 	g.restore();
 }
 game.draw();
+game.logic_timestep = 50;
+setInterval(game.logic, game.logic_timestep);
 
 </script>
 </body>
